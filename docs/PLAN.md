@@ -24,7 +24,7 @@ Each milestone is independently shippable and testable before the next begins.
 **Goal:** User can open a workspace folder, open `.xlsx` and `.docx` files in tabs, and edit them with full fidelity — looks and works like real Excel and Word.
 
 - [x] 1.1 App shell: 3-column layout (sidebar, viewer area, right panel placeholder) [W1]
-- [ ] 1.2 IPC bridge: main reads file → sends content to renderer [W1]
+- [x] 1.2 IPC bridge: main reads file → sends content to renderer [W1]
 - [ ] 1.3 Workspace folder picker → persisted to `electron-store` [W2]
 - [ ] 1.4 Tab bar: open multiple files, close tabs, dirty indicator (`•`) [W2]
 - [ ] 1.5 File tree: list `.xlsx` and `.docx` files only [W3]

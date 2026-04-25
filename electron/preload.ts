@@ -1,28 +1,29 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron';
+import { IPC_CHANNELS } from './ipc-channels';
+import type { WindowApi } from '../src/types/ipc';
 
-contextBridge.exposeInMainWorld('api', {
+const api: WindowApi = {
   // Workspace
-  pickWorkspace: () => ipcRenderer.invoke('workspace:pick'),
-  listFiles: (workspacePath: string) => ipcRenderer.invoke('workspace:listFiles', workspacePath),
-  readAllFilesAsText: (workspacePath: string) =>
-    ipcRenderer.invoke('workspace:readAllFilesAsText', workspacePath),
+  pickWorkspace: () => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_PICK),
+  listFiles: (workspacePath) =>
+    ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_LIST_FILES, workspacePath),
+  readAllFilesAsText: (workspacePath) =>
+    ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_READ_ALL_AS_TEXT, workspacePath),
 
   // File IO
-  openExcel: (filePath: string) => ipcRenderer.invoke('file:openExcel', filePath),
-  saveExcel: (filePath: string, snapshot: unknown) =>
-    ipcRenderer.invoke('file:saveExcel', filePath, snapshot),
-  openWord: (filePath: string) => ipcRenderer.invoke('file:openWord', filePath),
-  saveWord: (filePath: string, buffer: ArrayBuffer) =>
-    ipcRenderer.invoke('file:saveWord', filePath, buffer),
-  openPptx: (filePath: string) => ipcRenderer.invoke('file:openPptx', filePath),
-  savePptxEdit: (args: {
-    filePath: string
-    slideIndex: number
-    shapeName: string
-    newText: string
-  }) => ipcRenderer.invoke('file:savePptxEdit', args),
+  openExcel: (filePath) => ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN_EXCEL, filePath),
+  saveExcel: (filePath, snapshot) =>
+    ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE_EXCEL, filePath, snapshot),
+  openWord: (filePath) => ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN_WORD, filePath),
+  saveWord: (filePath, buffer) =>
+    ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE_WORD, filePath, buffer),
+  openPptx: (filePath) => ipcRenderer.invoke(IPC_CHANNELS.FILE_OPEN_PPTX, filePath),
+  savePptxEdit: (args) => ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE_PPTX_EDIT, args),
 
   // Settings
-  getLastWorkspace: () => ipcRenderer.invoke('settings:getLastWorkspace'),
-  setLastWorkspace: (path: string) => ipcRenderer.invoke('settings:setLastWorkspace', path),
-})
+  getLastWorkspace: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET_LAST_WORKSPACE),
+  setLastWorkspace: (path) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_LAST_WORKSPACE, path),
+};
+
+contextBridge.exposeInMainWorld('api', api);
