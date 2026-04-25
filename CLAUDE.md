@@ -68,6 +68,12 @@ When operating in plan mode OR when the user explicitly asks for a plan for a sp
 
 Never produce a plan without a validation section — even one-line tasks get a one-line validation step.
 
+### 7. Commit message style
+- Format: `<type>: <brief summary of what was done>` — e.g. `feat: add 3-column app shell layout (PLAN 1.1)`
+- Allowed types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`
+- Applies to **every** commit, including merge commits into `main` — never use `merge: …` as the type. When merging a feature branch, amend the merge commit's subject to the same `feat/fix/...:` form that describes the work being landed.
+- Keep the subject under ~70 chars; put any extra context in the body.
+
 ---
 
 ## Quick stack reference
