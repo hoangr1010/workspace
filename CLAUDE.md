@@ -11,10 +11,10 @@ Guidance for Claude Code when working in this repository.
 ## How to work in this repo
 
 ### 1. Always plan before executing
-- Before writing any code, present a plan of what you intend to do
-- Wait for explicit approval before starting
+- Before writing any code, present a plan **and a validation section** (see §6 for what "validation section" means) — wait for explicit approval before starting
 - Break work into small, reviewable chunks — never implement a large feature in one go
 - One logical unit at a time (one component, one handler, one store action)
+- If any part of the spec is unclear or underspecified, ask before guessing — do not silently make architectural decisions
 
 ### 2. Follow the architecture exactly
 - Read [`docs/architecture.md`](docs/architecture.md) before touching any file
@@ -31,6 +31,42 @@ Guidance for Claude Code when working in this repository.
 - Match the design pixel-for-pixel — no improvising layout, spacing, or color
 - Use design tokens from `src/styles/tokens.css` — never hardcode values
 - Use CSS Modules — no inline styles, no global class names
+
+### 4. Working from a task number
+
+When given a task by number (e.g. "implement 1.3"):
+1. Open [`docs/PLAN.md`](docs/PLAN.md) and find the item to understand its scope and wave (`[WN]`)
+2. Read the relevant section of [`docs/architecture.md`](docs/architecture.md) before writing any code
+3. For UI tasks, follow the Figma MCP workflow in section 3 above
+4. For IPC tasks, update the contract in `src/types/ipc.ts` first, then implement the handler in `electron/handlers/`
+5. Items in the same wave (e.g. 1.6 and 1.7 both `[W4]`) have no shared state and can be implemented in parallel; later waves must wait for earlier ones to land
+
+> ⚠️ The Claude CLI integration section in `architecture.md` is marked **NOT REVIEWED**.
+> Do not implement tasks 2.3–2.8 without explicit confirmation that the spec is finalized.
+
+### 5. Definition of done
+
+A task is complete when ALL of the following pass:
+- `npx tsc --noEmit` — zero errors
+- `npm run lint` — zero errors
+- UI tasks: rendered output matches the Figma screenshot
+- The agent marks the corresponding checkbox in [`docs/PLAN.md`](docs/PLAN.md) as `[x]` and includes that change in the same commit. The PostToolUse `check-docs.sh` hook will surface any related `/docs` updates to make.
+
+Do not mark a task done if any of the above fail.
+
+### 6. Plan mode and explicit plan requests
+
+When operating in plan mode OR when the user explicitly asks for a plan for a specific task, the response must include both:
+
+**(a) The implementation plan** — file-by-file: which files to create/modify, what changes, in what order, and any architectural decisions or unknowns flagged for the user.
+
+**(b) A validation section** — how to confirm the output is correct. Pick whichever applies and use the most concrete option available:
+- **Automated checks** — exact commands to run (`npx tsc --noEmit`, `npm run lint`, specific test commands) with expected pass criteria
+- **Manual UI verification** — a step-by-step the user can follow in the running app (e.g. "1. `npm run dev`, 2. click X, 3. expect Y to appear"), each step with the expected observable result
+- **Self-validation by the agent** — when the agent can verify itself (e.g. running `npx tsc --noEmit` and reading output, taking a screenshot and comparing to Figma, calling an IPC method and inspecting the response), say so explicitly so the user knows no manual step is needed
+- **What "wrong" looks like** — at least one failure signal so the user can spot a regression, not just confirm a happy path
+
+Never produce a plan without a validation section — even one-line tasks get a one-line validation step.
 
 ---
 

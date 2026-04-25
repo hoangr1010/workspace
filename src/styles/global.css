@@ -1,0 +1,14 @@
+/* PLAN 1.1 — Global reset, body, scrollbar.
+   Token references live in ./tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
