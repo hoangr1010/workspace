@@ -1,0 +1,25 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--size-title-bar);
+  padding: 0 var(--space-5);
+  padding-top: 28px;
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--hairline);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.workspace {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-high-2);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  -webkit-app-region: no-drag;
+}
