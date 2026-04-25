@@ -1,0 +1,133 @@
+/* AI Workspace Design System v1.0 — claude-clay */
+/* Source of truth for all tokens. Never hardcode values outside this file. */
+
+:root {
+  /* ─── SURFACES (6-step ladder, outer → raised) ─── */
+  --bg-outer:      #1a1917;   /* window gutter */
+  --bg-chrome:     #1f1e1c;   /* title bar, rail, tab bar inactive */
+  --bg-surface:    #262624;   /* content pane, active tab body */
+  --bg-surface-2:  #221f1d;   /* file tree panel, xlsx header */
+  --bg-surface-3:  #2b2a27;   /* diff card, total row */
+  --bg-raised:     #30302d;   /* chips, sheet tabs, pptx slides */
+
+  /* ─── BORDERS ─── */
+  --hairline:      #332f2b;   /* 0.5px row separators */
+  --border:        #3a3632;   /* 0.5px standard borders */
+  --border-strong: #4a4540;   /* hover / focus borders */
+
+  /* ─── TEXT RAMP (12 shades, cream-black) ─── */
+  --text:          #faf9f5;
+  --text-high:     #f5f4ee;   /* active tab label, headings */
+  --text-high-2:   #ebe9e1;   /* file names, card titles */
+  --text-body:     #e3e0d5;   /* default body / chat messages */
+  --text-body-2:   #d4d0c4;   /* ghost button, sub-messages */
+  --text-body-3:   #c5c0b3;   /* tokens, tree rows default */
+  --text-mid:      #b3ada0;   /* timestamps, inactive tab label */
+  --text-mid-2:    #9e988c;
+  --text-muted:    #857f74;   /* placeholder, disabled */
+  --text-subtle:   #6b655c;   /* kicker labels (ALL CAPS) */
+  --text-faint:    #585349;   /* idle rail icons, chevrons */
+  --text-fainter:  #44403a;   /* ghost text, trace separators */
+
+  /* ─── ACCENT — Claude clay (AI authorship only) ─── */
+  --accent:          #d97757;
+  --accent-dark:     #b85f3f;
+  --accent-dark-2:   #9e4f32;
+  --accent-light:    #e89878;
+  --accent-contrast: #1a1200;
+  --accent-rgb:      217, 119, 87;
+
+  /* ─── SEMANTIC ─── */
+  --diff-add:    #7ee5a3;   /* inserted text / cell */
+  --diff-remove: #e0604a;   /* struck-through content */
+  --ok:          #3ecf8e;   /* approve buttons */
+  --warn:        #f4b93b;   /* unsaved / attention */
+  --err:         #f87171;   /* destructive / failure */
+
+  /* ─── FILE TYPE HUES ─── */
+  --type-xls: #3ecf8e;
+  --type-doc: #6ea8fe;
+  --type-ppt: #f5a623;
+
+  /* ─── TYPOGRAPHY ─── */
+  --sans: 'Inter', -apple-system, system-ui, 'SF Pro Text', sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* ─── SPACING SCALE (4-based) ─── */
+  --space-0:  2px;    /* hairline gap inside icon groups */
+  --space-1:  4px;    /* tight icon-to-text, pill internal */
+  --space-2:  6px;    /* tab internal, icon-to-label in rail */
+  --space-3:  8px;    /* tree-row internal, button icon+text */
+  --space-4:  12px;   /* card internal gap, tab horizontal padding */
+  --space-5:  16px;   /* default panel padding */
+  --space-6:  20px;   /* card gutter, section heading gap */
+  --space-7:  24px;   /* region gap between columns */
+  --space-8:  32px;   /* major section separation */
+  --space-9:  48px;   /* top-level page-chrome only */
+
+  /* ─── CANONICAL SIZES ─── */
+  --size-tool-rail:  52px;
+  --size-file-tree:  256px;
+  --size-chat-panel: 380px;
+  --size-title-bar:  38px;
+  --size-tab-bar:    36px;
+  --size-row:        28px;
+  --size-btn-sm:     28px;
+  --size-btn-md:     32px;
+
+  /* ─── BORDER RADII ─── */
+  --radius-xs:   2px;    /* code chips */
+  --radius-sm:   3px;    /* inline pills */
+  --radius:      4px;    /* chips, buttons sm */
+  --radius-md:   5px;    /* buttons, rows */
+  --radius-lg:   6px;    /* cards small */
+  --radius-xl:   8px;    /* cards, panels, tabs */
+  --radius-full: 9999px; /* avatars, dots */
+
+  /* ─── MOTION ─── */
+  --motion-micro: 80ms ease-out;          /* hover color fade */
+  --motion-short: 120ms ease-out;         /* bg fade, opacity in */
+  --motion-base:  180ms cubic-bezier(.4, 1.3, .5, 1); /* toggle, tab focus */
+  --motion-theme: 200ms ease;             /* theme switch fade */
+}
+
+/* ─── LIGHT THEME ─── */
+/* Token names are identical — only values differ. Never condition on theme at component level. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-outer:      #ece5d8;
+    --bg-chrome:     #f0ead9;
+    --bg-surface:    #faf9f5;
+    --bg-surface-2:  #f5f0e6;
+    --bg-surface-3:  #efe8d6;
+    --bg-raised:     #ffffff;
+
+    --hairline:      #e2d9c4;
+    --border:        #d9d0b8;
+    --border-strong: #c5b89a;
+
+    --text:          #1a1917;
+    --text-high:     #1f1e1c;
+    --text-high-2:   #262624;
+    --text-body:     #3a3632;
+    --text-body-2:   #4a4540;
+    --text-body-3:   #5c574f;
+    --text-mid:      #6b655c;
+    --text-mid-2:    #857f74;
+    --text-muted:    #9e988c;
+    --text-subtle:   #b3ada0;
+    --text-faint:    #c5c0b3;
+    --text-fainter:  #d4d0c4;
+
+    --accent:          #c15f3c;
+    --accent-dark:     #9e4f32;
+    --accent-dark-2:   #7e3f28;
+    --accent-light:    #d97757;
+    --accent-contrast: #ffffff;
+    --accent-rgb:      193, 95, 60;
+
+    --type-xls: #2d8f52;
+    --type-doc: #3d6fc0;
+    --type-ppt: #c9771b;
+  }
+}

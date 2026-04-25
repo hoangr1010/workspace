@@ -1,0 +1,81 @@
+.btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  height: var(--size-btn-sm);
+  transition: background var(--motion-short), color var(--motion-short), border-color var(--motion-short);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* Primary — accent fill, commits to AI action */
+.primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+.primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+.primary:active:not(:disabled) {
+  background: var(--accent-dark-2);
+}
+
+/* Ghost — transparent with border, secondary / cancel */
+.ghost {
+  background: transparent;
+  color: var(--text-body-2);
+  border: 0.5px solid var(--border);
+}
+.ghost:hover:not(:disabled) {
+  background: rgba(var(--accent-rgb), 0.04);
+  border-color: var(--border-strong);
+}
+.ghost:active:not(:disabled) {
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+/* Approve — semantic green, inline change acceptance */
+.approve {
+  background: rgba(62, 207, 142, 0.10);
+  color: var(--ok);
+  border: 0.5px solid rgba(62, 207, 142, 0.30);
+  font-size: 11px;
+  padding: 4px 10px;
+  height: auto;
+}
+.approve:hover:not(:disabled) {
+  background: rgba(62, 207, 142, 0.18);
+}
+
+/* Reject — neutral ghost, inline change dismissal */
+.reject {
+  background: transparent;
+  color: var(--text-mid);
+  border: 0.5px solid var(--border);
+  font-size: 11px;
+  padding: 4px 10px;
+  height: auto;
+}
+.reject:hover:not(:disabled) {
+  background: rgba(var(--accent-rgb), 0.04);
+  color: var(--text-body-2);
+}
+
+/* Size modifier */
+.md {
+  height: var(--size-btn-md);
+  padding: 8px 16px;
+  font-size: 13px;
+}

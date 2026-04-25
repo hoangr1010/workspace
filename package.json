@@ -1,0 +1,46 @@
+{
+  "name": "claudecode",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Desktop app for AI with Office files",
+  "author": "Claude",
+  "main": "./out/main/main.cjs",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "pack": "electron-builder --publish never",
+    "dist": "electron-builder",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"electron/**/*.ts\""
+  },
+  "dependencies": {
+    "electron-is-dev": "^3.0.1",
+    "electron-store": "^8.1.0",
+    "node-pty": "^0.10.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4",
+    "electron-vite": "^2.0.0",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "vite": "^5.0.2"
+  }
+}

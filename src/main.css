@@ -1,0 +1,56 @@
+@import './styles/tokens.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--bg-outer);
+  color: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus ring — accent-tinted, no offset */
+:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.35);
+  outline-offset: 0;
+}
+
+/* Scrollbars — thin, themed */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-fainter);
+}
+
+/* Code / mono baseline */
+code, pre, kbd {
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(var(--accent-rgb), 0.25);
+  color: var(--text-high);
+}
