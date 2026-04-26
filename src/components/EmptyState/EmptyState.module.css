@@ -1,0 +1,155 @@
+.root {
+  height: 100%;
+  width: 100%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-7);
+  width: 480px;
+  padding: var(--space-8);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.logoMark {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-contrast);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: var(--space-3);
+}
+
+.name {
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-high);
+  letter-spacing: -0.01em;
+}
+
+.sub {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+.card {
+  width: 168px;
+  padding: var(--space-5);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: background var(--motion-short), border-color var(--motion-short);
+}
+
+.card:hover {
+  background: var(--bg-surface-3);
+  border-color: var(--border-strong);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.icon {
+  color: var(--text-mid);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-high-2);
+}
+
+/* ─── Recent workspaces ─── */
+.recent {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-family: var(--sans);
+}
+
+.recentHeader {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  padding: 0 var(--space-3);
+}
+
+.recentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recentItem {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--sans);
+  text-align: left;
+  transition: background var(--motion-short);
+}
+
+.recentItem:hover {
+  background: var(--bg-surface-3);
+}
+
+.recentItem:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.recentName {
+  font-size: 13px;
+  color: var(--text-high-2);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.recentPath {
+  font-size: 12px;
+  color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}

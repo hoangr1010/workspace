@@ -11,8 +11,21 @@
   overflow: hidden;
 }
 
+.rootEmpty {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'titlebar'
+    'empty';
+}
+
 .titlebar {
   grid-area: titlebar;
+}
+
+.empty {
+  grid-area: empty;
+  min-width: 0;
+  min-height: 0;
 }
 
 .sidebar {

@@ -4,7 +4,7 @@ import { listFiles, pickWorkspace, readAllFilesAsText } from './workspace.handle
 import { openWord, saveWord } from './word.handler';
 import { openExcel, saveExcel } from './excel.handler';
 import { openPptx, savePptxEdit } from './pptx.handler';
-import { getLastWorkspace, setLastWorkspace } from './settings.handler';
+import { addRecentWorkspace, getRecentWorkspaces } from './settings.handler';
 
 export function registerIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(IPC_CHANNELS.WORKSPACE_PICK, () => pickWorkspace());
@@ -42,8 +42,8 @@ export function registerIpcHandlers(ipcMain: IpcMain): void {
     ) => savePptxEdit(args),
   );
 
-  ipcMain.handle(IPC_CHANNELS.SETTINGS_GET_LAST_WORKSPACE, () => getLastWorkspace());
-  ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_LAST_WORKSPACE, (_e, value: string) =>
-    setLastWorkspace(value),
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_GET_RECENT_WORKSPACES, () => getRecentWorkspaces());
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_ADD_RECENT_WORKSPACE, (_e, value: string) =>
+    addRecentWorkspace(value),
   );
 }
