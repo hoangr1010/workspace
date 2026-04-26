@@ -30,6 +30,20 @@ seen_registry=false
 seen_types=false
 seen_shortcuts=false
 
+# Detect implementation files without PLAN.md update in same commit.
+# If src/ or electron/ files changed but PLAN.md not in the commit, flag it.
+impl_changed=false
+plan_in_commit=false
+while IFS= read -r f; do
+  case "$f" in
+    src/*|electron/*) impl_changed=true ;;
+    docs/PLAN.md) plan_in_commit=true ;;
+  esac
+done <<< "$changed"
+if $impl_changed && ! $plan_in_commit; then
+  add "• docs/PLAN.md — implementation files changed but no PLAN.md checkbox update in this commit. Per §5, the matching task checkbox must be marked [x] in the SAME commit."
+fi
+
 # Detect accelerator changes (added/removed/modified) anywhere in the commit.
 # If the diff touches an `accelerator:` line and shortcuts.md is NOT in the
 # same commit, flag it.
