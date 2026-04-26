@@ -19,9 +19,13 @@ export interface WindowApi {
     newText: string;
   }): Promise<PptxFileData>;
 
-  // Settings
-  getLastWorkspace(): Promise<string | null>;
-  setLastWorkspace(path: string): Promise<void>;
+  // Settings — recent workspaces (newest first, stale paths filtered out)
+  getRecentWorkspaces(): Promise<readonly string[]>;
+  addRecentWorkspace(path: string): Promise<void>;
+
+  // Events from main → renderer
+  onCloseWorkspace(handler: () => void): () => void;
+  onOpenWorkspace(handler: () => void): () => void;
 }
 
 declare global {

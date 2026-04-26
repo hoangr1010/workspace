@@ -10,8 +10,12 @@ export const IPC_CHANNELS = {
   FILE_OPEN_PPTX: 'file:openPptx',
   FILE_SAVE_PPTX_EDIT: 'file:savePptxEdit',
 
-  SETTINGS_GET_LAST_WORKSPACE: 'settings:getLastWorkspace',
-  SETTINGS_SET_LAST_WORKSPACE: 'settings:setLastWorkspace',
+  SETTINGS_GET_RECENT_WORKSPACES: 'settings:getRecentWorkspaces',
+  SETTINGS_ADD_RECENT_WORKSPACE: 'settings:addRecentWorkspace',
+
+  // Main → renderer events
+  EVENT_CLOSE_WORKSPACE: 'event:closeWorkspace',
+  EVENT_OPEN_WORKSPACE: 'event:openWorkspace',
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

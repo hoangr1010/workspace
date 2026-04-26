@@ -21,9 +21,21 @@ const api: WindowApi = {
   savePptxEdit: (args) => ipcRenderer.invoke(IPC_CHANNELS.FILE_SAVE_PPTX_EDIT, args),
 
   // Settings
-  getLastWorkspace: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET_LAST_WORKSPACE),
-  setLastWorkspace: (path) =>
-    ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_LAST_WORKSPACE, path),
+  getRecentWorkspaces: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET_RECENT_WORKSPACES),
+  addRecentWorkspace: (path) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_ADD_RECENT_WORKSPACE, path),
+
+  // Events from main → renderer
+  onCloseWorkspace: (handler) => {
+    const listener = (): void => handler();
+    ipcRenderer.on(IPC_CHANNELS.EVENT_CLOSE_WORKSPACE, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.EVENT_CLOSE_WORKSPACE, listener);
+  },
+  onOpenWorkspace: (handler) => {
+    const listener = (): void => handler();
+    ipcRenderer.on(IPC_CHANNELS.EVENT_OPEN_WORKSPACE, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.EVENT_OPEN_WORKSPACE, listener);
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);

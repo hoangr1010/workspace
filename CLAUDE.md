@@ -5,6 +5,7 @@ Guidance for Claude Code when working in this repository.
 - **Product:** [`docs/PRD.md`](docs/PRD.md)
 - **Build plan & milestones:** [`docs/PLAN.md`](docs/PLAN.md)
 - **Stack, architecture, IPC contract, folder structure:** [`docs/architecture.md`](docs/architecture.md)
+- **Keyboard shortcuts:** [`docs/commands/shortcuts.md`](docs/commands/shortcuts.md) — every accelerator is listed here. When you add, change, or remove a shortcut in `electron/main.ts`, update this file in the **same commit**. The `check-docs.sh` hook flags commits that miss it.
 
 ---
 

@@ -13,6 +13,7 @@ export interface WorkspaceState {
   dirtyFiles: ReadonlySet<string>;
 
   setWorkspace(path: string): Promise<void>;
+  closeWorkspace(): void;
   openFile(filePath: string): Promise<void>;
   closeFile(filePath: string): void;
   setActiveFile(filePath: string): void;
@@ -30,7 +31,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(() => ({
   dirtyFiles: new Set(),
 
   setWorkspace: async (path: string) => {
-    throw new Error(`PLAN 1.3 — setWorkspace not implemented (path: ${path})`);
+    // Files list stays empty until PLAN 1.5 implements listFiles().
+    useWorkspaceStore.setState({ workspacePath: path, files: [] });
+    await window.api.addRecentWorkspace(path);
+  },
+  closeWorkspace: () => {
+    useWorkspaceStore.setState({
+      workspacePath: null,
+      files: [],
+      openFiles: [],
+      activeFile: null,
+    });
   },
   openFile: async (filePath: string) => {
     throw new Error(`PLAN 1.4 / 1.6 / 1.7 — openFile not implemented (path: ${filePath})`);

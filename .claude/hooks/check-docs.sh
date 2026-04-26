@@ -28,6 +28,23 @@ seen_package=false
 seen_main=false
 seen_registry=false
 seen_types=false
+seen_shortcuts=false
+
+# Detect accelerator changes (added/removed/modified) anywhere in the commit.
+# If the diff touches an `accelerator:` line and shortcuts.md is NOT in the
+# same commit, flag it.
+shortcut_changed=false
+if git diff --unified=0 HEAD~1 HEAD 2>/dev/null | grep -E '^[+-][^+-].*accelerator\s*:' >/dev/null; then
+  shortcut_changed=true
+fi
+shortcuts_doc_in_commit=false
+if echo "$changed" | grep -q '^docs/commands/shortcuts\.md$'; then
+  shortcuts_doc_in_commit=true
+fi
+if $shortcut_changed && ! $shortcuts_doc_in_commit; then
+  add "• docs/commands/shortcuts.md — accelerator changed in this commit but shortcuts.md was not updated. Add/edit/remove the matching row in the same commit."
+  seen_shortcuts=true
+fi
 
 while IFS= read -r f; do
   case "$f" in
