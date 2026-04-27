@@ -27,7 +27,7 @@ Each milestone is independently shippable and testable before the next begins.
 - [x] 1.2 IPC bridge: main reads file → sends content to renderer [W1]
 - [x] 1.3 Workspace folder picker → persisted to `electron-store` [W2]
 - [x] 1.4 Tab bar: open multiple files, close tabs, dirty indicator (`•`) [W2]
-- [ ] 1.5 File tree: list `.xlsx` and `.docx` files only [W3]
+- [x] 1.5 File tree: list `.xlsx` and `.docx` files only [W3]
 - [ ] 1.6 Excel: SheetJS reads `.xlsx` → Univer snapshot → renderer mounts Univer with full toolbar, formula bar, multi-sheet tabs [W4]
 - [ ] 1.7 Word: main reads `.docx` → ArrayBuffer → renderer mounts SuperDoc with full toolbar [W4]
 - [ ] 1.8 Excel: direct cell editing → dirty state → save via SheetJS [W5]
