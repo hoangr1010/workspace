@@ -41,9 +41,20 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   dirtyFiles: new Set(),
 
   setWorkspace: async (path: string) => {
-    // Files list stays empty until PLAN 1.5 implements listFiles().
     useWorkspaceStore.setState({ workspacePath: path, files: [] });
     await window.api.addRecentWorkspace(path);
+    try {
+      const files = await window.api.listFiles(path);
+      // Guard against a stale response if the workspace was switched mid-flight.
+      if (useWorkspaceStore.getState().workspacePath === path) {
+        useWorkspaceStore.setState({ files });
+      }
+    } catch (err) {
+      console.error(`Failed to list files for ${path}:`, err);
+      if (useWorkspaceStore.getState().workspacePath === path) {
+        useWorkspaceStore.setState({ files: [] });
+      }
+    }
   },
   closeWorkspace: () => {
     useWorkspaceStore.setState({

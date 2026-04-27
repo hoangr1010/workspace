@@ -20,7 +20,7 @@ function App(): JSX.Element {
     if (!isFresh) {
       void window.api.getRecentWorkspaces().then((recents) => {
         const latest = recents[0]
-        if (latest) useWorkspaceStore.setState({ workspacePath: latest })
+        if (latest) void useWorkspaceStore.getState().setWorkspace(latest)
       })
     }
     const offClose = window.api.onCloseWorkspace(() => {

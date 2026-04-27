@@ -50,12 +50,13 @@
   transform: rotate(90deg);
 }
 
-.typeLabel {
-  font-family: var(--mono);
-  font-size: 10.5px;
+.typeIcon {
   flex-shrink: 0;
-  width: 12px;
-  text-align: center;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .name {
