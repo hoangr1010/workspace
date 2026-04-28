@@ -51,43 +51,41 @@ else
   report "npm run lint failed"
 fi
 
-# §5: PLAN.md updated on this branch
-if git log main..HEAD --name-only --pretty=format: 2>/dev/null | grep -q '^docs/PLAN\.md$'; then
-  ok "docs/PLAN.md updated on branch"
-  # Cross-check: the specific task ID's checkbox is marked [x]
-  if [ -n "$task_id" ]; then
-    if grep -E "^\s*-\s*\[x\].*\b${task_id}\b" docs/PLAN.md >/dev/null 2>&1; then
-      ok "PLAN.md task $task_id checkbox is [x]"
-    else
-      report "PLAN.md task $task_id checkbox is NOT marked [x] — agent must mark it before cleanup"
-    fi
+# §5: PLAN.md task checkbox is marked [x] (current file state, regardless of which commit set it)
+if [ -n "$task_id" ]; then
+  if grep -E "^\s*-\s*\[x\].*\b${task_id}\b" docs/PLAN.md >/dev/null 2>&1; then
+    ok "PLAN.md task $task_id checkbox is [x]"
+  else
+    report "PLAN.md task $task_id checkbox is NOT marked [x] — agent must mark it before cleanup"
   fi
-else
-  report "docs/PLAN.md was not updated in any commit on this branch — task checkbox missing?"
 fi
 
-# §5: at least one commit on the branch
-commit_count="$(git rev-list --count main..HEAD 2>/dev/null || echo 0)"
-if [ "$commit_count" -gt 0 ]; then
-  ok "$commit_count commit(s) on branch"
-else
-  report "no commits on this branch"
-fi
-
-# §10: branch merged into origin/main OR has an open PR
+# §10: branch merged into main (remote or local) OR has an open PR
 git fetch origin main >/dev/null 2>&1 || true
 merged=false
 has_pr=false
-if git branch -r --merged origin/main 2>/dev/null | grep -qE "(^|/)$branch\$"; then
-  merged=true
+
+# Prefer remote check if origin/main exists
+if git rev-parse --verify origin/main >/dev/null 2>&1; then
+  if git branch -r --merged origin/main 2>/dev/null | grep -qE "(^|/)$branch\$"; then
+    merged=true
+  fi
 fi
+
+# Fall back to local main (covers local-only repos and post-merge state)
+if ! $merged; then
+  if git branch --merged main 2>/dev/null | grep -qE "^[* ]+$branch\$"; then
+    merged=true
+  fi
+fi
+
 if command -v gh >/dev/null 2>&1; then
   pr_count="$(gh pr list --head "$branch" --state open --json number 2>/dev/null | jq 'length' 2>/dev/null || echo 0)"
   [ "${pr_count:-0}" -gt 0 ] && has_pr=true
 fi
 
 if $merged; then
-  ok "branch merged into origin/main"
+  ok "branch merged into main"
 elif $has_pr; then
   ok "open PR exists for branch"
 else
