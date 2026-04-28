@@ -12,24 +12,24 @@ Guidance for Claude Code when working in this repository.
 ## Workflow at a glance
 
 ```
-PLAN (§6) → IMPLEMENT → VERIFY (§8) → SHIP (§10) → CLEANUP (§9)
+PLAN → [engineer: "go"] → IMPLEMENT + VERIFY (loop) → [engineer: "manually review"] → SHIP → CLEANUP
 ```
 
-1. **Plan (§6)** — overview/diagram, file-by-file steps, Figma confirm for UI, validation section. Wait for engineer approval.
-2. **Implement** — if test-first chosen in (c), write tests → fail → code → pass. Otherwise code straight.
-3. **Verify (§8)** — run every validation step automatically; loop max 3 attempts per step; never edit a step to make it pass.
-4. **Done (§5)** — tsc ✓, lint ✓, all validation steps ✓, UI screenshot ✓, `PLAN.md` checkbox `[x]`.
-5. **Ship (§10)** — engineer prompts `merge to main` or `create PR`: fetch + rebase + re-verify, then merge/PR.
-6. **Cleanup (§9)** — engineer prompts `cleanup task`: refuses if §10 didn't run; otherwise removes worktree, branch, and task-only temp files.
+1. **Plan (§6)** — brief overview, file changes, verification steps. **Stop and wait for "go".**
+2. **Implement + Verify (§8)** — write code → run all automated verification steps → fix if failing → repeat until all pass. Automatic, no pause.
+3. **Manual review** — engineer prompts `manually review`: Claude opens app and lists verification steps.
+4. **Ship (§10)** — engineer prompts `merge to main` or `create PR`.
+5. **Cleanup (§9)** — engineer prompts `cleanup task`.
 
-**Three engineer commands** — `merge to main`, `create PR`, `cleanup task`. Plan mode is automatic.
+**Human gates:** plan approval, manual review, ship, cleanup — Claude never advances past these without an explicit engineer prompt.
 
 ---
 
 ## How to work in this repo
 
 ### 1. Always plan before executing
-- Before writing any code, present a plan that follows §6 in full — wait for explicit approval before starting
+- Before writing any code, present a plan that follows §6 in full
+- **Stop after presenting the plan — do not write any code until the engineer explicitly says "go" (or equivalent)**
 - Break work into small, reviewable chunks — never implement a large feature in one go
 - One logical unit at a time (one component, one handler, or one store action)
 - If any part of the spec is unclear or underspecified, ask before guessing — do not silently make architectural decisions
@@ -65,8 +65,8 @@ When given a task by number (e.g. "implement 1.3"):
 A task is complete when ALL of the following pass:
 - `npx tsc --noEmit` — zero errors
 - `npm run lint` — zero errors
-- All verification steps listed in the task plan have been executed by the agent and passed — no step may be skipped
-- UI tasks: a screenshot of the rendered deliverable is attached in the response, taken by the agent via preview tools, and confirmed pixel-matched against the Figma screenshot
+- All automated verification steps from the task plan passed
+- Engineer has completed manual review (UI tasks: rendered output confirmed against Figma by engineer)
 - The agent marks the corresponding checkbox in [`docs/PLAN.md`](docs/PLAN.md) as `[x]` and includes that change in the same commit. The PostToolUse `check-docs.sh` hook will surface any related `/docs` updates to make.
 
 Do not mark a task done if any of the above fail.
@@ -75,42 +75,32 @@ Do not mark a task done if any of the above fail.
 
 When operating in plan mode OR when the user explicitly asks for a plan for a specific task, the response must include all of the following in order:
 
-**(a) A brief overview** — 2–4 sentences explaining *how* the change works at a high level: what systems are involved, what the data flow is, and what the user will observe. Alternatively (or in addition), a brief ASCII/text diagram showing how the pieces interact. This lets the engineer understand scope before reading the detail.
+**(a) Overview** — 2–3 sentences or a short ASCII diagram showing data flow and what the engineer will observe.
 
-**(b) The implementation plan** — file-by-file: which files to create/modify, what changes, in what order, and any architectural decisions or unknowns flagged for the user.
+**(b) File changes** — bullet list: `path/to/file` → what changes (one line each). Flag any unknowns or architectural decisions. For UI tasks: confirm the Figma node exists (`get_metadata` / `get_design_context`) and name it — or present a minimal HTML/CSS mockup for approval before proceeding.
 
-**(b.1) For any UI task — Figma confirmation before styling:**
-- Call `get_metadata` / `get_design_context` on the file to check if a matching component exists in Figma.
-- **If it exists:** State which Figma node/component will be used and confirm the implementation will follow it pixel-for-pixel. Do NOT describe colors or spacing in text — just confirm "will follow Figma node [name / ID]".
-- **If it does NOT exist:** Render a minimal HTML/CSS mockup using existing design tokens that shows the proposed component. Present this to the engineer for approval. Do NOT proceed to implementation until the engineer approves. Once approved, the engineer adds it to Figma and tells the agent the new node ID/name. The agent then re-runs `get_design_context` on that node to confirm it landed, and only then continues with the plan. Never write a new component without this confirmation step.
+**(c) Verification steps** — numbered list of exactly what to check after implement+verify. Include both automated steps (commands + expected output) and manual UI steps (click X → expect Y) as applicable.
 
-**(c) A validation section** — how to confirm the output is correct. Pick whichever applies and use the most concrete option available:
-- **Tests written by the agent** — use when logic is unit-testable and tests give more signal than UI steps. If chosen, write test file(s) as the very first step after plan approval (before any feature code), run to confirm failure, implement, then confirm pass. Include the test file path and run command in the plan.
-- **Automated checks** — exact commands to run (`npx tsc --noEmit`, `npm run lint`, specific test commands) with expected pass criteria
-- **Manual UI verification** — use when the change is best confirmed visually. Step-by-step through the running app (e.g. "1. `npm run dev`, 2. click X, 3. expect Y to appear"), each step with the expected observable result
-- **Self-validation by the agent** — when the agent can verify itself (e.g. running `npx tsc --noEmit` and reading output, taking a screenshot and comparing to Figma, calling an IPC method and inspecting the response), say so explicitly so the user knows no manual step is needed
-
-**Every approach must include a "what wrong looks like" signal** — at least one specific failure mode the engineer can spot a regression by, not just a happy-path pass.
-
-Choose the approach that gives the most signal for this specific change — tests for logic-heavy work, UI steps for visual/interaction work. Mix approaches when both are needed. If agent-written tests are chosen, follow test-first order: write tests → confirm fail → implement → confirm pass.
-
-Never produce a plan without a validation section — even one-line tasks get a one-line validation step.
+After presenting the plan, **stop** — do not write any code until the engineer says "go".
 
 ### 7. Commit message style
-- Format: `<type>: <brief summary of what was done>` — e.g. `feat: add 3-column app shell layout (PLAN 1.1)`
+- Format: `<type>: <brief summary>` — e.g. `feat: add 3-column app shell layout (PLAN 1.1)`
 - Allowed types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`
-- Applies to **every** commit, including merge commits into `main` — never use `merge: …` as the type. Pass `-m "<type>: <summary>"` to `git merge` directly (see §10) so the merge commit lands with the right subject; do not rely on amending after the fact.
-- Keep the subject under ~70 chars; put any extra context in the body.
+- Subject line only — keep it under ~70 chars. Add brief bullet points in the body only if context is genuinely non-obvious from the diff.
+- No co-author footer.
+- Applies to **every** commit, including merge commits into `main` — never use `merge: …` as the type. Pass `-m "<type>: <summary>"` to `git merge` directly (see §10).
 
 ### 8. Post-implementation verification
 
-Immediately after finishing any implementation, run every verification step listed in the task plan — do not wait for the user to ask.
+After writing code, run the implement + verify loop automatically — no engineer prompt needed:
 
-- If the task plan includes agent-written tests, those were already written before implementation (§6c). Run them now and confirm they pass.
-- Execute each step in order; if a step fails, diagnose and fix the issue, then re-run **from the first failing step**.
-- **Never modify or remove a verification step** to make it pass — only fix the underlying code. If a verification step appears wrong, flag it to the engineer and wait for permission before changing it.
-- **Loop budget:** retry the same failing step at most **3 times**. If it still fails after 3 attempts, or if you cannot identify the root cause, stop and report what was tried and what's still broken — do not keep looping. The engineer will decide whether to continue.
-- Once all steps pass, attach the proof per §5 (test output, type-check summary, screenshot for UI tasks) in the response.
+1. Run all automated verification steps from the task plan (tsc, lint, tests, IPC checks — whatever the plan specifies) in order.
+2. If any step fails, diagnose and fix the underlying code, then re-run from the first failing step.
+3. **Loop budget:** retry the same failing step at most **3 times**. If still failing after 3 attempts, stop and report what was tried — do not keep looping.
+4. **Never modify or remove a verification step** to make it pass. If a step appears wrong, flag it to the engineer and wait for permission.
+5. Once all automated steps pass, **stop and report results** — do not open the app, do not take screenshots. Wait for the engineer.
+
+**On engineer prompt `manually review`:** run `npm run dev` (if not already running), then print the numbered verification steps from the plan for the engineer to work through.
 
 ### 9. Cleanup task
 
