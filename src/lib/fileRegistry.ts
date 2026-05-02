@@ -4,7 +4,6 @@
 
 import type { ComponentType } from 'react';
 import type { FileExt, FileData } from '../types/file';
-import { WordViewer } from '../components/ViewerArea/WordViewer';
 
 export interface FileHandler<T extends FileData> {
   readonly open: (filePath: string) => Promise<T>;
@@ -13,13 +12,4 @@ export interface FileHandler<T extends FileData> {
 }
 
 // Populate per task: 1.6 (.xlsx), 1.7 (.docx), 4.3 (.pptx).
-export const fileRegistry: Partial<Record<FileExt, FileHandler<FileData>>> = {
-  '.docx': {
-    open: (filePath) => window.api.openWord(filePath),
-    save: (_filePath, _data) => {
-      // PLAN 1.9 — wire SuperDoc export → window.api.saveWord.
-      return Promise.reject(new Error('PLAN 1.9 — saveWord not implemented yet'));
-    },
-    Viewer: WordViewer,
-  },
-};
+export const fileRegistry: Partial<Record<FileExt, FileHandler<FileData>>> = {};

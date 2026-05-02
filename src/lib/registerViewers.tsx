@@ -4,6 +4,7 @@
 import type { ComponentType } from 'react';
 import { fileRegistry } from './fileRegistry';
 import { ExcelViewer } from '../components/ViewerArea/ExcelViewer';
+import { WordViewer } from '../components/ViewerArea/WordViewer';
 import type { FileData, ExcelFileData } from '../types/file';
 
 /**
@@ -23,6 +24,14 @@ function bridgeViewer<T extends FileData>(
     return <Component data={data as T} filePath={filePath} />;
   };
 }
+
+// .docx — open via IPC, renderer mounts SuperDoc. Save lands in PLAN 1.9.
+fileRegistry['.docx'] = {
+  open: (filePath) => window.api.openWord(filePath),
+  save: (_filePath, _data) =>
+    Promise.reject(new Error('PLAN 1.9 — saveWord not implemented yet')),
+  Viewer: WordViewer,
+};
 
 // .xlsx — open via IPC, renderer mounts Univer. Save lands in PLAN 1.8.
 fileRegistry['.xlsx'] = {
