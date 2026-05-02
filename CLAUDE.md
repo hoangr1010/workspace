@@ -54,11 +54,12 @@ At implementation time:
 ### 4. Working from a task number
 
 When given a task by number (e.g. "implement 1.3"):
-1. Open [`docs/PLAN.md`](docs/PLAN.md) and find the item to understand its scope. Wave ordering and any "not reviewed" warnings live in PLAN.md alongside the tasks.
-2. Read the relevant section of [`docs/architecture.md`](docs/architecture.md) before writing any code
-3. **Rename the worktree branch to `task/X.Y-<short-kebab-name>`** as the very first step in the worktree (e.g. `task/1.5-tab-bar`). Use `git branch -m <new-name>` from inside the worktree. This makes `git log`, `gh pr list`, and `preflight-cleanup.sh` self-documenting and lets multiple parallel tasks be told apart at a glance. The `<short-kebab-name>` is 2–4 words derived from the PLAN.md task title.
-4. For UI tasks, follow §3 and §6(b.1)
-5. For IPC tasks, update the contract in `src/types/ipc.ts` first, then implement the handler in `electron/handlers/`
+1. **Sync with remote `main` first.** From inside the worktree, run `git fetch origin main` then `git rebase origin/main`. This guarantees the feature branch starts from the latest `main` and surfaces conflicts immediately rather than at §10. If conflicts arise, resolve them file-by-file, stage the resolutions, and continue (`git rebase --continue`). Do not `--abort` without telling the engineer first.
+2. Open [`docs/PLAN.md`](docs/PLAN.md) and find the item to understand its scope. Wave ordering and any "not reviewed" warnings live in PLAN.md alongside the tasks.
+3. Read the relevant section of [`docs/architecture.md`](docs/architecture.md) before writing any code
+4. **Rename the worktree branch to `task/X.Y-<short-kebab-name>`** as the first git-state change in the worktree (e.g. `task/1.5-tab-bar`). Use `git branch -m <new-name>` from inside the worktree. This makes `git log`, `gh pr list`, and `preflight-cleanup.sh` self-documenting and lets multiple parallel tasks be told apart at a glance. The `<short-kebab-name>` is 2–4 words derived from the PLAN.md task title.
+5. For UI tasks, follow §3 and §6(b.1)
+6. For IPC tasks, update the contract in `src/types/ipc.ts` first, then implement the handler in `electron/handlers/`
 
 ### 5. Definition of done
 
