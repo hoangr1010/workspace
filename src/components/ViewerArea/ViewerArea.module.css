@@ -9,5 +9,14 @@
 .content {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-neutral-400);
+  font-size: var(--font-size-sm);
 }
