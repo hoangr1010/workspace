@@ -2,12 +2,23 @@
 // Implements WindowApi.{openWord, saveWord}.
 // See src/types/ipc.ts and docs/architecture.md → "File type handling / Word".
 
+import { promises as fs } from 'node:fs';
 import type { WordFileData } from '../../src/types/file';
 
 export async function openWord(filePath: string): Promise<WordFileData> {
-  throw new Error(`PLAN 1.7 — openWord not implemented (path: ${filePath})`);
+  const bytes = await fs.readFile(filePath);
+  // Slice to a clean ArrayBuffer — Node Buffers can share memory with a larger
+  // pool, so we copy the exact byte range to send a standalone buffer across
+  // the IPC structured-clone boundary.
+  const buffer = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+  return { kind: 'word', buffer };
 }
 
 export async function saveWord(filePath: string, buffer: ArrayBuffer): Promise<void> {
-  throw new Error(`PLAN 1.9 — saveWord not implemented (path: ${filePath}, bytes: ${buffer.byteLength})`);
+  throw new Error(
+    `PLAN 1.9 — saveWord not implemented (path: ${filePath}, bytes: ${buffer.byteLength})`,
+  );
 }

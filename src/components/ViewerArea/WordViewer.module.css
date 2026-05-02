@@ -1,0 +1,203 @@
+.root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-surface);
+
+  /* Compact toolbar to roughly Google-Docs scale (overrides on SuperDoc CSS vars). */
+  --sd-ui-toolbar-height: 26px;
+  --sd-ui-toolbar-padding-x: 8px;
+  --sd-ui-toolbar-padding-y: 2px;
+  --sd-ui-toolbar-item-padding: 3px;
+  --sd-ui-toolbar-item-gap: 1px;
+  --sd-ui-tools-icon-size: 16px;
+
+  /* Comment input contrast — darker border + explicit white background so
+     the textarea reads against the page surface. */
+  --sd-ui-comments-input-bg: #ffffff;
+  --sd-ui-comments-input-border: #6b7280;
+  --sd-ui-text-placeholder: #9ca3af;
+}
+
+/* SuperDoc layout overrides — keep edits scoped to our viewer.
+   Rules use :global() so they reach SuperDoc's own class names but
+   only apply inside .root (CSS-module scoping on the wrapper). */
+
+/* (2) Toolbar wraps to a second line instead of overflowing horizontally,
+       so all controls remain reachable when the viewer is narrow. SuperDoc's
+       toolbar is a flex row of grouped buttons; we wrap both the outer row
+       and the inner groups so individual buttons can break to a new line. */
+.root :global(.superdoc-toolbar) {
+  flex-wrap: wrap !important;
+  height: auto !important;
+  min-height: 0 !important;
+  justify-content: flex-start !important;
+  row-gap: 2px;
+  flex-shrink: 0;
+}
+
+.root :global(.superdoc-toolbar) > * {
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex-shrink: 1 !important;
+  row-gap: 2px;
+}
+
+/* Constrain SuperDoc to the available space so its internal scroll
+   container doesn't extend past the viewer's bottom edge. The React
+   wrapper inserts two extra divs between our `.root` and `.superdoc`
+   (`.superdoc-wrapper` and `.superdoc-editor-container`) — each grows
+   to fit content unless we cap it. We make our `.root` a flex column
+   that stretches the wrapper, then force every layer down to the
+   actual `.superdoc` to behave as a column with bounded height. */
+.root :global(.superdoc-wrapper) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.root :global(.superdoc-editor-container) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.root :global(.superdoc-editor-container) > :not(.superdoc-toolbar) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.root :global(.superdoc) {
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  flex: 1 1 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+.root :global(.superdoc--contained) {
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* SuperDoc's --contained wrapper is display:flex with default
+   `min-width: auto` on its children, which lets `.superdoc__layers`
+   grow to its content's intrinsic size (the 816px page). That overflows
+   the actual viewer column and there's no scroll. Force min-width:0
+   down the chain so each level is constrained to the parent column. */
+.root :global(.superdoc--contained .superdoc__layers) {
+  height: 100% !important;
+  min-height: 0;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* SCROLL CONTAINER: hoisted to .superdoc__document so that BOTH
+   .superdoc__sub-document (the page) AND .superdoc__comments-layer
+   (the absolute-positioned comment overlay) scroll together — single
+   pane for page + comments per the user's requirement. */
+.root :global(.superdoc--contained .superdoc__document) {
+  height: 100% !important;
+  min-height: 0;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  /* `safe center` falls back to flex-start when content overflows the
+     cross-axis, so horizontal scroll works instead of spilling equally
+     on both sides. */
+  align-items: safe center !important;
+}
+
+/* Children of the scroll container keep their intrinsic width so the
+   scroll container can compute a real scrollWidth/scrollHeight. */
+.root :global(.superdoc--contained .superdoc__document) > * {
+  flex-shrink: 0 !important;
+}
+
+/* Page wrapper is no longer a scroll container — let the parent handle it. */
+.root :global(.superdoc--contained .superdoc__sub-document) {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* Comments overlay sticks to the same scroll context. Keep it absolute so
+   anchor positions align with the page text, but ensure it occupies the
+   full document scroll height (not just the visible viewport) so anchors
+   on later pages remain reachable. */
+.root :global(.superdoc--contained .superdoc__comments-layer) {
+  position: absolute !important;
+  pointer-events: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Comment input box — stronger contrast against page surface. */
+.root :global(.new-comment-input-wrapper),
+.root :global(.reply-input-wrapper) {
+  border: 1.5px solid #6b7280 !important;
+  background: #ffffff !important;
+}
+
+.root :global(.new-comment-input-wrapper .superdoc-field),
+.root :global(.reply-input-wrapper .superdoc-field) {
+  color: #1a1a1a !important;
+}
+
+.root :global(.new-comment-input-wrapper .sd-editor-placeholder::before),
+.root :global(.reply-input-wrapper .sd-editor-placeholder::before) {
+  color: #6b7280 !important;
+}
+
+.error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+  color: var(--color-neutral-300);
+}
+
+.errorIcon {
+  font-size: 48px;
+  line-height: 1;
+  color: var(--color-neutral-400);
+  margin-bottom: var(--space-2);
+}
+
+.errorTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-neutral-100);
+  max-width: 560px;
+  word-break: break-word;
+}
+
+.errorReason {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-400);
+  max-width: 560px;
+}
