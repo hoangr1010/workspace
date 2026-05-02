@@ -7,6 +7,8 @@
   background: var(--bg-chrome);
   border-bottom: 0.5px solid var(--border);
   overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
   flex-shrink: 0;
 }
 

@@ -11,19 +11,21 @@
     "preview": "electron-vite preview",
     "pack": "electron-builder --publish never",
     "dist": "electron-builder",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
+    "lint:fix": "eslint . --fix --cache --cache-location node_modules/.cache/eslint/",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"electron/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@superdoc-dev/react": "^1.2.1",
     "@univerjs/presets": "^0.21.1",
     "electron-is-dev": "^3.0.1",
     "electron-store": "^8.1.0",
     "node-pty": "^0.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "superdoc": "^1.31.0",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
