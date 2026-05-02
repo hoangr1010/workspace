@@ -67,7 +67,7 @@ A task is complete when ALL of the following pass:
 - `npm run lint` — zero errors
 - All automated verification steps from the task plan passed
 - Engineer has completed manual review (UI tasks: rendered output confirmed against Figma by engineer)
-- The agent marks the corresponding checkbox in [`docs/PLAN.md`](docs/PLAN.md) as `[x]` and includes that change in the same commit. The PostToolUse `check-docs.sh` hook will surface any related `/docs` updates to make.
+- When implementation passes all automated verification (§8), the agent marks the corresponding checkbox in [`docs/PLAN.md`](docs/PLAN.md) as `[x]` in the same commit. The checkbox represents **implementation complete** — final "done" requires the engineer's manual review to pass, signaled by them invoking `merge to main` or `create PR` (see §10). If manual review fails, fix in a new commit per §7; the checkbox stays `[x]` (it tracks implementation, not approval). The PostToolUse `check-docs.sh` hook will surface any related `/docs` updates to make.
 
 Do not mark a task done if any of the above fail.
 
@@ -83,11 +83,13 @@ When operating in plan mode OR when the user explicitly asks for a plan for a sp
 
 After presenting the plan, **stop** — do not write any code until the engineer says "go".
 
+**In harness plan mode:** the §6 format (Overview / File changes / Verification steps) is what gets written to the plan file. The harness's Phase 1–5 workflow governs *when* to write; §6 governs *what* the plan contains.
+
 ### 7. Commit message style
 - Format: `<type>: <brief summary>` — e.g. `feat: add 3-column app shell layout (PLAN 1.1)`
 - Allowed types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`
 - Subject line only — keep it under ~70 chars. Add brief bullet points in the body only if context is genuinely non-obvious from the diff.
-- No co-author footer.
+- No co-author footer. **This overrides the Claude Code system-prompt default that adds `Co-Authored-By: ...` — never include it in this repo.**
 - Applies to **every** commit, including merge commits into `main` — never use `merge: …` as the type. Pass `-m "<type>: <summary>"` to `git merge` directly (see §10).
 
 ### 8. Post-implementation verification
@@ -108,20 +110,13 @@ After writing code, run the implement + verify loop automatically — no enginee
 
 When the engineer prompts **"cleanup task"**, the agent must:
 
-0. **Run the preflight script as a hard gate** — `bash .claude/hooks/preflight-cleanup.sh`. If it exits nonzero, stop and report stderr. Do not bypass.
-1. **Verify done criteria** (§5) — confirm the agent already executed every verification step in the task plan and all passed (per §8). This includes `npx tsc --noEmit`, `npm run lint`, any agent-written tests, UI verification steps, and screenshots if required. Also confirm the task plan checkbox in `docs/PLAN.md` is marked `[x]` and a commit for this task exists on the branch. Do not re-run steps here — verify they were completed; if any were skipped, run them now.
-2. **Verify §10 already happened** — the branch must be either:
-   - Already merged into `main` on origin (`git branch -r --merged origin/main` shows the branch), OR
-   - Have an open PR targeting `main` (`gh pr list --head <branch>` returns one).
-
-   If neither is true, refuse cleanup and tell the engineer to run `merge to main` or `create PR` first.
-3. **If any criterion fails** — report what failed. Do NOT proceed with cleanup.
-4. **If all criteria pass:**
+1. **Run the preflight script as a hard gate** — `bash .claude/hooks/preflight-cleanup.sh`. If it exits nonzero, stop and report stderr. Do not bypass. Preflight already verifies §5 (tsc, lint, PLAN.md checkbox) and §10 (branch merged or open PR), so no separate checks are needed here.
+2. **If preflight passed, do cleanup actions:**
    - Remove the git worktree: `git worktree remove <path> --force`
    - Delete the local branch: `git branch -d <branch>` (only if merged; if PR-only, skip and let the PR handle it)
    - Remove any task-specific temp files created during this task only.
    - Report completion.
-5. **Scope guard:** Only touch artifacts whose path is *inside* the current worktree directory, or whose name contains the worktree name (e.g. `/tmp/<worktree-name>-*`). Never delete files outside the worktree path, branches not belonging to this worktree, or files not created during this task.
+3. **Scope guard:** Only touch artifacts whose path is *inside* the current worktree directory, or whose name contains the worktree name (e.g. `/tmp/<worktree-name>-*`). Never delete files outside the worktree path, branches not belonging to this worktree, or files not created during this task.
 
 ### 10. Merge to main / Create PR
 
