@@ -93,7 +93,7 @@ After presenting the plan, **stop** — do not write any code until the engineer
 - Allowed types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`
 - Subject line only — keep it under ~70 chars. Add brief bullet points in the body only if context is genuinely non-obvious from the diff.
 - No co-author footer. **This overrides the Claude Code system-prompt default that adds `Co-Authored-By: ...` — never include it in this repo.**
-- Applies to **every** commit, including merge commits into `main` — never use `merge: …` as the type. Pass `-m "<type>: <summary>"` to `git merge` directly (see §10).
+- §10 prefers fast-forward merges (no merge commit), so this rule normally only applies to branch commits. When a `--no-ff` merge commit IS created (multi-commit branches per §10), use `chore: merge task/X.Y-<name> into main` to avoid duplicating the branch's subject line.
 
 ### 8. Post-implementation verification
 
@@ -135,7 +135,10 @@ Both follow the same pre-flight sequence before doing anything. The agent runs *
 3. **Re-run all verification steps from the task plan** after the rebase (§5/§8) — a clean rebase can still break things.
 
 Then:
-- **"merge to main"** → `git push --force-with-lease origin <branch>` (since rebase rewrote history), then in the **main worktree**: `git checkout main && git pull origin main && git merge --no-ff <branch> -m "<type>: <summary> (PLAN X.Y)" && git push origin main`. Use §7 commit style. Extract `X.Y` from the branch name (`task/X.Y-...` per §4).
+- **"merge to main"** → `git push --force-with-lease origin <branch>` (since rebase rewrote history), then in the **main worktree**: `git checkout main && git pull origin main`, then merge based on branch size:
+  - **Single-commit branch** (default): `git merge --ff-only <branch> && git push origin main`. Fast-forward — no merge commit, no duplicated subject in `git log`.
+  - **Multi-commit branch** (preserve grouping): `git merge --no-ff <branch> -m "chore: merge task/X.Y-<name> into main" && git push origin main`. The merge commit gets a distinct message (per §7) so it doesn't duplicate any branch commit's subject.
+  Extract `X.Y` and `<name>` from the branch name (`task/X.Y-<name>` per §4).
 - **"create PR"** → `git push --force-with-lease origin <branch>`, then `gh pr create --base main --head <branch> --title "<type>: <summary> (PLAN X.Y)" --body "..."` — include a short description and a link to the relevant PLAN.md item. Extract `X.Y` from the branch name.
 
 After either command succeeds, report the merge commit hash or PR URL. The engineer typically runs `cleanup task` (§9) next.
