@@ -72,6 +72,8 @@ A task is complete when ALL of the following pass:
 
 Do not mark a task done if any of the above fail.
 
+**Docs-only exception:** when every file changed on the feature branch (vs `origin/main`) ends in `.md`, the cleanup preflight (§9) auto-skips `tsc` and `lint` — markdown changes cannot affect them. The merge-status and PLAN.md checkbox checks still apply.
+
 ### 6. Plan mode and explicit plan requests
 
 When operating in plan mode OR when the user explicitly asks for a plan for a specific task, the response must include all of the following in order:

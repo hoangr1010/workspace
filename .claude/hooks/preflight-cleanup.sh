@@ -37,15 +37,49 @@ else
   warn "branch '$branch' does not follow 'task/X.Y-<name>' convention (§4) — task-checkbox cross-check skipped"
 fi
 
-# §5: tsc passes
-if npx tsc --noEmit >/dev/null 2>&1; then
+# Detect docs-only diff vs origin/main (fall back to local main).
+# If every file changed on this branch ends in .md, skip tsc + lint —
+# markdown changes cannot affect them.
+docs_only=false
+diff_base=""
+if git rev-parse --verify origin/main >/dev/null 2>&1; then
+  diff_base="origin/main"
+elif git rev-parse --verify main >/dev/null 2>&1; then
+  diff_base="main"
+fi
+
+if [ -n "$diff_base" ]; then
+  changed="$(git diff --name-only "${diff_base}...HEAD" 2>/dev/null)"
+  # If branch is already merged, the diff above is empty. Fall back to
+  # finding the --no-ff merge commit (per §10) whose 2nd parent is HEAD,
+  # and diff its parents to see what this branch contributed.
+  if [ -z "$changed" ]; then
+    head_sha="$(git rev-parse HEAD)"
+    while read -r merge_sha p1 p2; do
+      if [ "$p2" = "$head_sha" ]; then
+        changed="$(git diff --name-only "$p1" "$p2" 2>/dev/null)"
+        break
+      fi
+    done < <(git log --merges --first-parent --pretty='%H %P' "${diff_base}" 2>/dev/null)
+  fi
+  if [ -n "$changed" ] && ! echo "$changed" | grep -vE '\.md$' >/dev/null; then
+    docs_only=true
+  fi
+fi
+
+# §5: tsc passes (skipped for docs-only diffs)
+if $docs_only; then
+  ok "docs-only diff — skipping npx tsc --noEmit"
+elif npx tsc --noEmit >/dev/null 2>&1; then
   ok "npx tsc --noEmit"
 else
   report "npx tsc --noEmit failed"
 fi
 
-# §5: lint passes
-if npm run lint >/dev/null 2>&1; then
+# §5: lint passes (skipped for docs-only diffs)
+if $docs_only; then
+  ok "docs-only diff — skipping npm run lint"
+elif npm run lint >/dev/null 2>&1; then
   ok "npm run lint"
 else
   report "npm run lint failed"
