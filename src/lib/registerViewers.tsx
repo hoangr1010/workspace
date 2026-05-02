@@ -5,7 +5,7 @@ import type { ComponentType } from 'react';
 import { fileRegistry } from './fileRegistry';
 import { ExcelViewer } from '../components/ViewerArea/ExcelViewer';
 import { WordViewer } from '../components/ViewerArea/WordViewer';
-import type { FileData, ExcelFileData } from '../types/file';
+import type { FileData, ExcelFileData, WordFileData } from '../types/file';
 
 /**
  * Wrap a kind-specific Viewer so it satisfies the registry's union-typed slot.
@@ -30,7 +30,7 @@ fileRegistry['.docx'] = {
   open: (filePath) => window.api.openWord(filePath),
   save: (_filePath, _data) =>
     Promise.reject(new Error('PLAN 1.9 — saveWord not implemented yet')),
-  Viewer: WordViewer,
+  Viewer: bridgeViewer<WordFileData>(WordViewer, 'word'),
 };
 
 // .xlsx — open via IPC, renderer mounts Univer. Save lands in PLAN 1.8.
