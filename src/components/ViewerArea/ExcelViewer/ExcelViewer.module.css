@@ -1,0 +1,21 @@
+/* Univer renders its own toolbar, formula bar, and grid inside this container.
+   Don't use CSS `zoom` — it breaks canvas pointer-event math (cursor lands on
+   the wrong cell, zoom slider drags don't track). The grid's initial scale is
+   set per-sheet via `zoomRatio` in the snapshot instead, which the in-app zoom
+   slider can then adjust normally. */
+.container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--sans);
+  background: var(--bg-surface);
+}
+
+/* Apply our app font to all Univer chrome (toolbar, formula bar, sheet tabs).
+   The grid canvas itself draws cell text using each cell's own font from the
+   workbook (Arial by default in our snapshot) — that's document content, not
+   chrome, and shouldn't be overridden. */
+.container :global(.univer-app-root),
+.container :global([data-u-comp]) {
+  font-family: var(--sans) !important;
+}

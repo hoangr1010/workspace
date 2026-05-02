@@ -2,8 +2,9 @@
 // See docs/architecture.md → "State management".
 
 import { create } from 'zustand';
-import type { WorkspaceFile, FileData, FileExt } from '../types/file';
+import type { WorkspaceFile, FileData } from '../types/file';
 import { fileRegistry } from '../lib/fileRegistry';
+import { getFileExt } from '../lib/fileExt';
 
 export interface WorkspaceState {
   workspacePath: string | null;
@@ -21,15 +22,6 @@ export interface WorkspaceState {
   updateFileData(filePath: string, data: FileData): void;
   markDirty(filePath: string): void;
   markClean(filePath: string): void;
-}
-
-const KNOWN_EXTS: readonly FileExt[] = ['.xlsx', '.docx', '.pptx'];
-
-function getExt(filePath: string): FileExt | null {
-  const dot = filePath.lastIndexOf('.');
-  if (dot < 0) return null;
-  const ext = filePath.slice(dot).toLowerCase();
-  return (KNOWN_EXTS as readonly string[]).includes(ext) ? (ext as FileExt) : null;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
@@ -84,7 +76,7 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
 
     // Best-effort load via registry. PLAN 1.6/1.7/4.3 register handlers later;
     // until then, the tab opens with no content (viewer renders an empty state).
-    const ext = getExt(filePath);
+    const ext = getFileExt(filePath);
     if (!ext) return;
     const handler = fileRegistry[ext];
     if (!handler) return;

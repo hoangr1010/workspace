@@ -267,7 +267,15 @@ univerSnapshotToWorkbook()   ◄──────────  ← workbook.sav
 fs.writeFile()                             ← window.api.saveExcel(path, snapshot)
 ```
 
-**Alternative IO path** (per PLAN): if SheetJS CE drops style fidelity, swap to `@zwight/luckyexcel` `transformExcelToUniver()` in the renderer; main just sends raw `ArrayBuffer`.
+**SheetJS CE style support — confirmed scope (PLAN 1.6).** With `cellStyles: true`, SheetJS surfaces fills (`cell.s.fill` / flattened `patternType`+`fgColor`) and number formats (`cell.z`) on read. It does **not** populate font weight/color or borders. If those become required, fall back to the alternative path below.
+
+**Alternative IO path** (per PLAN): if SheetJS CE style fidelity isn't enough, swap to `@zwight/luckyexcel` `transformExcelToUniver()` in the renderer; main just sends raw `ArrayBuffer`.
+
+**Save-flow gotchas (PLAN 1.8).** The converter is asymmetric — when reversing the snapshot back into a SheetJS workbook for write:
+- Strip `#` from color values (Univer stores `#RRGGBB`; SheetJS write expects bare hex).
+- Strip the leading `=` from formulas (SheetJS write expects `B3/C3`, not `=B3/C3`).
+- Restore a cached `v` for formula cells (the read path omits `v` so Univer recomputes; SheetJS needs a value to write into the file).
+- Preserve the snapshot's `zoomRatio` (default 0.85 set by the read path) — only persist a user-changed value to avoid silently writing 0.85 into untouched files.
 
 ### Word
 
