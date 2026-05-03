@@ -1,9 +1,7 @@
-// PLAN 1.8 — Per-file registry of "give me your live Univer snapshot" callbacks.
-// ExcelViewer registers its workbook's snapshot getter on mount; the .xlsx
-// save path in registerViewers.tsx pulls it out at save time so Univer's
-// in-memory edits get serialized instead of the stale file-open snapshot.
-//
-// The whole module is one Map. Each function is one line.
+// PLAN 1.8 — Per-file "live snapshot getter" registry.
+// ExcelViewer registers a getter on mount; the .xlsx save path calls it to
+// pull Univer's post-edit snapshot (the file-open snapshot is stale).
+// See docs/architecture.md → "File type handling / Excel".
 
 type SnapshotGetter = () => Record<string, unknown>;
 

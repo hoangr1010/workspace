@@ -1,7 +1,7 @@
-// PLAN 1.6 — Excel viewer. Mounts Univer (toolbar, formula bar, grid, sheet tabs)
-// onto a div and loads the workbook snapshot.
-// PLAN 1.8 — Subscribes to mutation commands → markDirty, registers a live-
-// snapshot getter so the save path can pull the post-edit state.
+// PLAN 1.6 — Excel viewer. Mounts Univer (toolbar, formula bar, grid, sheet
+// tabs) onto a div and loads the workbook snapshot.
+// PLAN 1.8 — Subscribes to mutation commands → markDirty, registers the live
+// Univer snapshot for the save path.
 
 import { useEffect, useRef } from 'react';
 import { createUniver, defaultTheme, LocaleType, mergeLocales, CommandType } from '@univerjs/presets';
@@ -35,14 +35,10 @@ export function ExcelViewer({ data, filePath }: Props): JSX.Element {
     });
 
     const fwb = univerAPI.createWorkbook(data.snapshot);
-
-    // Expose the live snapshot under this file path so the save path in
-    // registerViewers.tsx can pull post-edit state instead of the stale prop.
     register(filePath, () => fwb.save() as unknown as Record<string, unknown>);
 
-    // Mark dirty on every mutation. MUTATION is the type that actually changes
-    // saved state (typing, paste, fill, undo, merges); OPERATION (selection,
-    // scroll) is skipped.
+    // MUTATION = changes to saved state (typing, paste, fill, undo, merges).
+    // OPERATION = transient UI state (selection, scroll) — skipped.
     const sub = univerAPI.addEvent(univerAPI.Event.CommandExecuted, (event) => {
       if (event.type === CommandType.MUTATION) {
         useWorkspaceStore.getState().markDirty(filePath);

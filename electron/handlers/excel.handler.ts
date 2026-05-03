@@ -19,10 +19,6 @@ export async function openExcel(filePath: string): Promise<ExcelFileData> {
   return { kind: 'excel', snapshot };
 }
 
-// PLAN 1.8 — Inverse of openExcel: takes a Univer snapshot (from FWorkbook.save()
-// in the renderer) and writes it back to disk as XLSX. Async write so other IPC
-// calls aren't blocked. Errors propagate through Electron's IPC error path so
-// the renderer keeps the file dirty on failure.
 export async function saveExcel(filePath: string, snapshot: Record<string, unknown>): Promise<void> {
   const wb = univerSnapshotToWorkbook(snapshot);
   const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true });

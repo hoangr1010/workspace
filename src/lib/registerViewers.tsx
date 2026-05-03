@@ -36,9 +36,7 @@ fileRegistry['.docx'] = {
 };
 
 // .xlsx — open via IPC, renderer mounts Univer. Save pulls the live snapshot
-// the mounted ExcelViewer registered (its post-edit Univer state); falls back
-// to the stale file-open snapshot only if no viewer is mounted for this path.
-// markClean runs only on success — failures keep the dot on so the user knows.
+// from the registry (set by the mounted ExcelViewer); markClean only on success.
 fileRegistry['.xlsx'] = {
   open: (filePath) => window.api.openExcel(filePath),
   save: async (filePath, data) => {
