@@ -414,16 +414,21 @@ describe('univerSnapshotToWorkbook — layout', () => {
     expect(ws['!rows']?.[0]?.hpx).toBe(30);
   });
 
-  it('used-range trim: rowCount:200, columnCount:30 with only A1 → !ref is "A1:A1"', () => {
+  it('used-range trim: rowCount:200, columnCount:30 with only A1 → !ref bounds are A1', () => {
     // Critical: without trimming, every save would bloat the file by padding
     // every cell out to the full sheet bounds.
+    // SheetJS's encode_range canonically emits 'A1' (no ':A1') for single-cell
+    // ranges, so we assert on decoded bounds rather than the literal string.
     const snap = makeSnapshot({
       cellData: { 0: { 0: { v: 'only', t: 1 } } },
       rowCount: 200,
       columnCount: 30,
     });
     const ws = univerSnapshotToWorkbook(snap).Sheets['Sheet1']!;
-    expect(ws['!ref']).toBe('A1:A1');
+    expect(ws['!ref']).toBeDefined();
+    const range = XLSX.utils.decode_range(ws['!ref']!);
+    expect(range.e.r).toBe(0);
+    expect(range.e.c).toBe(0);
   });
 });
 

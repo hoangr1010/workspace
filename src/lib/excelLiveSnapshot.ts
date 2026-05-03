@@ -1,22 +1,22 @@
 // PLAN 1.8 — Per-file registry of "give me your live Univer snapshot" callbacks.
-// ExcelViewer registers its workbook's `FWorkbook.save` getter on mount;
-// the .xlsx save path in registerViewers.tsx pulls it out at save time so
-// Univer's in-memory edits get serialized instead of the stale file-open snapshot.
+// ExcelViewer registers its workbook's snapshot getter on mount; the .xlsx
+// save path in registerViewers.tsx pulls it out at save time so Univer's
+// in-memory edits get serialized instead of the stale file-open snapshot.
 //
-// The whole module is one Map. Three functions are one line each.
-// The Map and real bodies land in slice 3 of the TDD plan; this is the slice-0 stub.
+// The whole module is one Map. Each function is one line.
 
 type SnapshotGetter = () => Record<string, unknown>;
 
-export function register(_filePath: string, _getter: SnapshotGetter): void {
-  // stub — slice 3 wires this to getters.set(_filePath, _getter)
+const getters = new Map<string, SnapshotGetter>();
+
+export function register(filePath: string, getter: SnapshotGetter): void {
+  getters.set(filePath, getter);
 }
 
-export function unregister(_filePath: string): void {
-  // stub — slice 3 wires this to getters.delete(_filePath)
+export function unregister(filePath: string): void {
+  getters.delete(filePath);
 }
 
-export function getSnapshot(_filePath: string): Record<string, unknown> | undefined {
-  // stub — slice 3 wires this to getters.get(_filePath)?.()
-  return undefined;
+export function getSnapshot(filePath: string): Record<string, unknown> | undefined {
+  return getters.get(filePath)?.();
 }

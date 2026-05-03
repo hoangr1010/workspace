@@ -2,10 +2,10 @@
 // Implements WindowApi.{openExcel, saveExcel}.
 // See src/types/ipc.ts and docs/architecture.md → "File type handling / Excel".
 
-import { readFileSync } from 'fs';
+import { readFileSync, promises as fsp } from 'fs';
 import * as XLSX from 'xlsx';
 import type { ExcelFileData } from '../../src/types/file';
-import { workbookToUniverSnapshot } from '../lib/excel-converter';
+import { workbookToUniverSnapshot, univerSnapshotToWorkbook } from '../lib/excel-converter';
 
 export async function openExcel(filePath: string): Promise<ExcelFileData> {
   // Read raw bytes from disk (main process only — file paths never reach the renderer)
@@ -19,7 +19,12 @@ export async function openExcel(filePath: string): Promise<ExcelFileData> {
   return { kind: 'excel', snapshot };
 }
 
-// saveExcel is PLAN 1.8 — will read the snapshot back from Univer and write via SheetJS
+// PLAN 1.8 — Inverse of openExcel: takes a Univer snapshot (from FWorkbook.save()
+// in the renderer) and writes it back to disk as XLSX. Async write so other IPC
+// calls aren't blocked. Errors propagate through Electron's IPC error path so
+// the renderer keeps the file dirty on failure.
 export async function saveExcel(filePath: string, snapshot: Record<string, unknown>): Promise<void> {
-  throw new Error(`PLAN 1.8 — saveExcel not implemented (path: ${filePath}, keys: ${Object.keys(snapshot).length})`);
+  const wb = univerSnapshotToWorkbook(snapshot);
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true });
+  await fsp.writeFile(filePath, buf as Buffer);
 }

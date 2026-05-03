@@ -1,13 +1,17 @@
 // PLAN 1.6 — Excel viewer. Mounts Univer (toolbar, formula bar, grid, sheet tabs)
 // onto a div and loads the workbook snapshot.
+// PLAN 1.8 — Subscribes to mutation commands → markDirty, registers a live-
+// snapshot getter so the save path can pull the post-edit state.
 
 import { useEffect, useRef } from 'react';
-import { createUniver, defaultTheme, LocaleType, mergeLocales } from '@univerjs/presets';
+import { createUniver, defaultTheme, LocaleType, mergeLocales, CommandType } from '@univerjs/presets';
 import { UniverSheetsCorePreset } from '@univerjs/presets/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/presets/preset-sheets-core/locales/en-US';
 import '@univerjs/presets/lib/styles/preset-sheets-core.css';
 import type { ExcelFileData } from '../../../types/file';
 import { readClayRamp } from '../../../styles/clayRamp';
+import { useWorkspaceStore } from '../../../store/workspaceStore';
+import { register, unregister } from '../../../lib/excelLiveSnapshot';
 import styles from './ExcelViewer.module.css';
 
 interface Props {
@@ -15,7 +19,7 @@ interface Props {
   filePath: string;    // Used by parent as React key — switching files remounts this component
 }
 
-export function ExcelViewer({ data }: Props): JSX.Element {
+export function ExcelViewer({ data, filePath }: Props): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,8 +34,26 @@ export function ExcelViewer({ data }: Props): JSX.Element {
       presets: [UniverSheetsCorePreset({ container: containerRef.current })],
     });
 
-    univerAPI.createWorkbook(data.snapshot);
-    return () => univerAPI.dispose();
+    const fwb = univerAPI.createWorkbook(data.snapshot);
+
+    // Expose the live snapshot under this file path so the save path in
+    // registerViewers.tsx can pull post-edit state instead of the stale prop.
+    register(filePath, () => fwb.save() as unknown as Record<string, unknown>);
+
+    // Mark dirty on every mutation. MUTATION is the type that actually changes
+    // saved state (typing, paste, fill, undo, merges); OPERATION (selection,
+    // scroll) is skipped.
+    const sub = univerAPI.addEvent(univerAPI.Event.CommandExecuted, (event) => {
+      if (event.type === CommandType.MUTATION) {
+        useWorkspaceStore.getState().markDirty(filePath);
+      }
+    });
+
+    return () => {
+      sub.dispose();
+      unregister(filePath);
+      univerAPI.dispose();
+    };
   // Snapshot read once at mount; parent's key={filePath} forces remount on file change.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

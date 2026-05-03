@@ -340,33 +340,35 @@ export function univerSnapshotToWorkbook(snapshot: Record<string, unknown>): XLS
         const uCell = row[cKey];
         if (!uCell) continue;
 
-        const cell: XLSX.CellObject = {} as XLSX.CellObject;
+        // Cell type: Univer 1/2/4 → SheetJS 's'/'n'/'b'. Default to 's' so the
+        // CellObject `t` field is always populated; gets overwritten below.
+        let t: XLSX.ExcelDataType = 's';
+        switch (uCell.t) {
+          case 1: t = 's'; break;
+          case 2: t = 'n'; break;
+          case 4: t = 'b'; break;
+        }
+        const cell: XLSX.CellObject = { t };
 
         // Formula: SheetJS stores without leading '='
         if (typeof uCell.f === 'string') {
           const f = uCell.f;
-          (cell as Record<string, unknown>).f = f.startsWith('=') ? f.slice(1) : f;
+          cell.f = f.startsWith('=') ? f.slice(1) : f;
         }
         if (uCell.v !== undefined) {
-          (cell as Record<string, unknown>).v = uCell.v;
-        }
-        // Cell type: Univer 1/2/4 → SheetJS 's'/'n'/'b'
-        switch (uCell.t) {
-          case 1: cell.t = 's'; break;
-          case 2: cell.t = 'n'; break;
-          case 4: cell.t = 'b'; break;
+          cell.v = uCell.v as Exclude<XLSX.CellObject['v'], undefined>;
         }
 
         // Style + number format from the shared styles dict
         if (typeof uCell.s === 'string' && styles[uCell.s]) {
           const u = styles[uCell.s] as Record<string, unknown>;
           const { style, numFmt } = univerStyleToSheetJs(u);
-          if (style) (cell as Record<string, unknown>).s = style;
-          if (numFmt) (cell as Record<string, unknown>).z = numFmt;
+          if (style) cell.s = style;
+          if (numFmt) cell.z = numFmt;
         }
 
         // Skip cells with no real content (no value, no formula)
-        if ((cell as Record<string, unknown>).v === undefined && !(cell as Record<string, unknown>).f) continue;
+        if (cell.v === undefined && !cell.f) continue;
 
         ws[XLSX.utils.encode_cell({ r, c })] = cell;
         if (r < minR) minR = r;

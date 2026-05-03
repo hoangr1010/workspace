@@ -30,7 +30,7 @@ Each milestone is independently shippable and testable before the next begins.
 - [x] 1.5 File tree: list `.xlsx` and `.docx` files only [W3]
 - [x] 1.6 Excel: SheetJS reads `.xlsx` → Univer snapshot → renderer mounts Univer with full toolbar, formula bar, multi-sheet tabs [W4]
 - [x] 1.7 Word: main reads `.docx` → ArrayBuffer → renderer mounts SuperDoc with full toolbar [W4]
-- [ ] 1.8 Excel: direct cell editing → dirty state → save via SheetJS [W5]
+- [x] 1.8 Excel: direct cell editing → dirty state → save via SheetJS [W5]
 - [ ] 1.9 Word: direct text editing → dirty state → save via SuperDoc export API [W5]
 - [ ] 1.10 Keyboard shortcut: Cmd+S saves the active file [W6]
 

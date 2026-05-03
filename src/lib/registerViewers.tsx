@@ -6,6 +6,8 @@ import { fileRegistry } from './fileRegistry';
 import { ExcelViewer } from '../components/ViewerArea/ExcelViewer';
 import { WordViewer } from '../components/ViewerArea/WordViewer';
 import type { FileData, ExcelFileData, WordFileData } from '../types/file';
+import { getSnapshot } from './excelLiveSnapshot';
+import { useWorkspaceStore } from '../store/workspaceStore';
 
 /**
  * Wrap a kind-specific Viewer so it satisfies the registry's union-typed slot.
@@ -33,12 +35,17 @@ fileRegistry['.docx'] = {
   Viewer: bridgeViewer<WordFileData>(WordViewer, 'word'),
 };
 
-// .xlsx — open via IPC, renderer mounts Univer. Save lands in PLAN 1.8.
+// .xlsx — open via IPC, renderer mounts Univer. Save pulls the live snapshot
+// the mounted ExcelViewer registered (its post-edit Univer state); falls back
+// to the stale file-open snapshot only if no viewer is mounted for this path.
+// markClean runs only on success — failures keep the dot on so the user knows.
 fileRegistry['.xlsx'] = {
   open: (filePath) => window.api.openExcel(filePath),
-  save: (filePath, data) => {
+  save: async (filePath, data) => {
     if (data.kind !== 'excel') throw new Error('kind mismatch');
-    return window.api.saveExcel(filePath, (data as ExcelFileData).snapshot);
+    const live = getSnapshot(filePath) ?? (data as ExcelFileData).snapshot;
+    await window.api.saveExcel(filePath, live);
+    useWorkspaceStore.getState().markClean(filePath);
   },
   Viewer: bridgeViewer<ExcelFileData>(ExcelViewer, 'excel'),
 };
