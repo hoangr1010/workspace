@@ -20,7 +20,6 @@
   "dependencies": {
     "@superdoc-dev/react": "^1.2.1",
     "@univerjs/presets": "^0.21.1",
-    "electron-is-dev": "^3.0.1",
     "electron-store": "^8.1.0",
     "node-pty": "^0.10.1",
     "react": "^18.2.0",
@@ -31,6 +30,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@tomjs/electron-devtools-installer": "^4.0.1",
     "@types/node": "^25.6.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
