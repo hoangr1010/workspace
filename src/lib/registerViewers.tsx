@@ -4,7 +4,8 @@
 import type { ComponentType } from 'react';
 import { fileRegistry } from './fileRegistry';
 import { ExcelViewer } from '../components/ViewerArea/ExcelViewer';
-import type { FileData, ExcelFileData } from '../types/file';
+import { WordViewer } from '../components/ViewerArea/WordViewer';
+import type { FileData, ExcelFileData, WordFileData } from '../types/file';
 
 /**
  * Wrap a kind-specific Viewer so it satisfies the registry's union-typed slot.
@@ -23,6 +24,14 @@ function bridgeViewer<T extends FileData>(
     return <Component data={data as T} filePath={filePath} />;
   };
 }
+
+// .docx — open via IPC, renderer mounts SuperDoc. Save lands in PLAN 1.9.
+fileRegistry['.docx'] = {
+  open: (filePath) => window.api.openWord(filePath),
+  save: (_filePath, _data) =>
+    Promise.reject(new Error('PLAN 1.9 — saveWord not implemented yet')),
+  Viewer: bridgeViewer<WordFileData>(WordViewer, 'word'),
+};
 
 // .xlsx — open via IPC, renderer mounts Univer. Save lands in PLAN 1.8.
 fileRegistry['.xlsx'] = {

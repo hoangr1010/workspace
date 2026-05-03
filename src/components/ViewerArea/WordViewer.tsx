@@ -10,7 +10,7 @@ import type {
   SuperDocExceptionEvent,
 } from '@superdoc-dev/react'
 import '@superdoc-dev/react/style.css'
-import type { FileData } from '../../types/file'
+import type { WordFileData } from '../../types/file'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import styles from './WordViewer.module.css'
 
@@ -53,7 +53,7 @@ function validateDocxBuffer(buffer: ArrayBuffer): ValidationResult {
 }
 
 interface Props {
-  data: FileData
+  data: WordFileData
   filePath: string
 }
 
@@ -79,18 +79,17 @@ export function WordViewer({ data, filePath }: Props): JSX.Element | null {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
 
-  // Hooks must run unconditionally — derive nullable buffer first, narrow after.
-  const buffer = data.kind === 'word' ? data.buffer : null
+  const buffer = data.buffer
 
   // Pre-flight validation runs once per buffer reference.
   const validation = useMemo<ValidationResult | null>(
-    () => (buffer ? validateDocxBuffer(buffer) : null),
+    () => validateDocxBuffer(buffer),
     [buffer],
   )
 
   // SuperDoc accepts File | Blob | string | object; pass a File so it has a name.
   const file = useMemo(() => {
-    if (!buffer || validation?.ok !== true) return null
+    if (validation?.ok !== true) return null
     const fileName = filePath.split('/').pop() ?? 'document.docx'
     return new File([buffer], fileName, { type: DOCX_MIME })
   }, [buffer, filePath, validation])
@@ -99,8 +98,6 @@ export function WordViewer({ data, filePath }: Props): JSX.Element | null {
   useEffect(() => {
     setRuntimeError(null)
   }, [buffer])
-
-  if (!buffer) return null
 
   // Pre-flight failure → render error block, do not mount SuperDoc.
   if (validation && !validation.ok) {
