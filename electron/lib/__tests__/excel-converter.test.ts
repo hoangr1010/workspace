@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as XLSX from 'xlsx';
 import { workbookToUniverSnapshot, univerSnapshotToWorkbook } from '../excel-converter';
+import type { UniverSnapshot } from '../../../src/types/file';
 
 // Helper: build a minimal SheetJS workbook from a map of cell refs → cell objects
 function makeWorkbook(sheets: Record<string, Record<string, XLSX.CellObject>>): XLSX.WorkBook {
@@ -21,7 +22,7 @@ function makeWorkbook(sheets: Record<string, Record<string, XLSX.CellObject>>): 
 }
 
 // Helper: get cellData from the first sheet in the snapshot
-function firstSheetCellData(snap: Record<string, unknown>): Record<number, Record<number, Record<string, unknown>>> {
+function firstSheetCellData(snap: UniverSnapshot): Record<number, Record<number, Record<string, unknown>>> {
   const sheets = snap.sheets as Record<string, Record<string, unknown>>;
   const sheetOrder = snap.sheetOrder as string[];
   const firstId = sheetOrder[0] as string;
@@ -257,11 +258,12 @@ function makeSnapshot(opts: {
   rowCount?: number;
   columnCount?: number;
   extraSheetFields?: Record<string, unknown>;
-}): Record<string, unknown> {
+}): UniverSnapshot {
   const sheetId = 'sheet_0';
   return {
     id: 'workbook_1',
     name: 'Workbook',
+    appVersion: '0.21.1',
     sheetOrder: [sheetId],
     sheets: {
       [sheetId]: {
@@ -279,7 +281,7 @@ function makeSnapshot(opts: {
     styles: opts.styles ?? {},
     locale: 'enUS',
     resources: [],
-  };
+  } as unknown as UniverSnapshot;
 }
 
 describe('univerSnapshotToWorkbook — core shape', () => {
@@ -295,6 +297,7 @@ describe('univerSnapshotToWorkbook — core shape', () => {
     const snap = {
       id: 'workbook_1',
       name: 'Workbook',
+      appVersion: '0.21.1',
       sheetOrder: ['s_a', 's_b', 's_c'],
       sheets: {
         s_a: { id: 's_a', name: 'Alpha', cellData: {}, mergeData: [], columnData: {}, rowData: {}, rowCount: 10, columnCount: 5 },
@@ -304,7 +307,7 @@ describe('univerSnapshotToWorkbook — core shape', () => {
       styles: {},
       locale: 'enUS',
       resources: [],
-    };
+    } as unknown as UniverSnapshot;
     const wb = univerSnapshotToWorkbook(snap);
     expect(wb.SheetNames).toEqual(['Alpha', 'Beta', 'Gamma']);
   });

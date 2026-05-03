@@ -3,6 +3,7 @@
 // See docs/architecture.md → "File type handling / Excel".
 
 import * as XLSX from 'xlsx';
+import type { UniverSnapshot } from '../../src/types/file';
 
 // Univer's CanvasColorService rejects bare hex strings ("D97757") and ARGB
 // strings ("FFD97757") — it requires a CSS-compatible color string. Excel/SheetJS
@@ -96,7 +97,7 @@ function mergeNumFmt(
   return { ...univerStyle, n: { pattern: numFmt } };
 }
 
-export function workbookToUniverSnapshot(wb: XLSX.WorkBook): Record<string, unknown> {
+export function workbookToUniverSnapshot(wb: XLSX.WorkBook): UniverSnapshot {
   const sheets: Record<string, unknown> = {};
   const sheetOrder: string[] = [];
 
@@ -228,15 +229,19 @@ export function workbookToUniverSnapshot(wb: XLSX.WorkBook): Record<string, unkn
     };
   }
 
+  // The internal sheets/styles records are built loosely (Record<string, unknown>);
+  // we cast at this boundary rather than thread Univer's strict types through
+  // the whole converter. The shape is structurally what Univer expects.
   return {
     id: 'workbook_1',
     name: (wb.Props?.Title as string | undefined) ?? 'Workbook',
+    appVersion: '0.21.1',
     sheetOrder,
     sheets,
     styles, // shared style dictionary: cells reference entries here by id
     locale: 'enUS',
     resources: [],
-  };
+  } as unknown as UniverSnapshot;
 }
 
 // Inverse of normalizeColor — Univer stores '#RRGGBB', SheetJS wants 'RRGGBB' (no #).
@@ -310,7 +315,7 @@ function univerStyleToSheetJs(univer: Record<string, unknown>): {
 // columnCount in the snapshot are padded for grid feel). Univer-only fields
 // (tabColor, hidden, zoomRatio, showGridlines) are dropped silently — SheetJS
 // CE can't represent them.
-export function univerSnapshotToWorkbook(snapshot: Record<string, unknown>): XLSX.WorkBook {
+export function univerSnapshotToWorkbook(snapshot: UniverSnapshot): XLSX.WorkBook {
   const wb = XLSX.utils.book_new();
   const sheetOrder = (snapshot.sheetOrder ?? []) as string[];
   const sheets = (snapshot.sheets ?? {}) as Record<string, Record<string, unknown>>;

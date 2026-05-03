@@ -3,8 +3,11 @@
 // pull Univer's post-edit snapshot (the file-open snapshot is stale).
 // See docs/architecture.md → "File type handling / Excel".
 
-type SnapshotGetter = () => Record<string, unknown>;
+import type { UniverSnapshot } from '../types/file';
 
+type SnapshotGetter = () => UniverSnapshot;
+
+// filePath → getter that returns the mounted ExcelViewer's current Univer state.
 const getters = new Map<string, SnapshotGetter>();
 
 export function register(filePath: string, getter: SnapshotGetter): void {
@@ -15,6 +18,6 @@ export function unregister(filePath: string): void {
   getters.delete(filePath);
 }
 
-export function getSnapshot(filePath: string): Record<string, unknown> | undefined {
+export function getSnapshot(filePath: string): UniverSnapshot | undefined {
   return getters.get(filePath)?.();
 }

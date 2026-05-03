@@ -5,6 +5,7 @@ import { openWord, saveWord } from './word.handler';
 import { openExcel, saveExcel } from './excel.handler';
 import { openPptx, savePptxEdit } from './pptx.handler';
 import { addRecentWorkspace, getRecentWorkspaces } from './settings.handler';
+import type { UniverSnapshot } from '../../src/types/file';
 
 export function registerIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(IPC_CHANNELS.WORKSPACE_PICK, () => pickWorkspace());
@@ -20,7 +21,7 @@ export function registerIpcHandlers(ipcMain: IpcMain): void {
   );
   ipcMain.handle(
     IPC_CHANNELS.FILE_SAVE_EXCEL,
-    (_e, filePath: string, snapshot: Record<string, unknown>) =>
+    (_e, filePath: string, snapshot: UniverSnapshot) =>
       saveExcel(filePath, snapshot),
   );
   ipcMain.handle(IPC_CHANNELS.FILE_OPEN_WORD, (_e, filePath: string) => openWord(filePath));

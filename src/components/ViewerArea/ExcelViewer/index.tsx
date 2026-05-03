@@ -35,7 +35,7 @@ export function ExcelViewer({ data, filePath }: Props): JSX.Element {
     });
 
     const fwb = univerAPI.createWorkbook(data.snapshot);
-    register(filePath, () => fwb.save() as unknown as Record<string, unknown>);
+    register(filePath, () => fwb.save());
 
     // MUTATION = changes to saved state (typing, paste, fill, undo, merges).
     // OPERATION = transient UI state (selection, scroll) — skipped.

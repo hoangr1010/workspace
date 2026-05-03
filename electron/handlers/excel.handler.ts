@@ -4,7 +4,7 @@
 
 import { readFileSync, promises as fsp } from 'fs';
 import * as XLSX from 'xlsx';
-import type { ExcelFileData } from '../../src/types/file';
+import type { ExcelFileData, UniverSnapshot } from '../../src/types/file';
 import { workbookToUniverSnapshot, univerSnapshotToWorkbook } from '../lib/excel-converter';
 
 export async function openExcel(filePath: string): Promise<ExcelFileData> {
@@ -19,7 +19,7 @@ export async function openExcel(filePath: string): Promise<ExcelFileData> {
   return { kind: 'excel', snapshot };
 }
 
-export async function saveExcel(filePath: string, snapshot: Record<string, unknown>): Promise<void> {
+export async function saveExcel(filePath: string, snapshot: UniverSnapshot): Promise<void> {
   const wb = univerSnapshotToWorkbook(snapshot);
   const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true });
   await fsp.writeFile(filePath, buf as Buffer);

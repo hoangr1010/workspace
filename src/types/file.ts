@@ -1,4 +1,10 @@
+import type { IWorkbookData } from '@univerjs/core';
+
 export type FileExt = '.xlsx' | '.docx' | '.pptx';
+
+// The shape Univer hands us via FWorkbook.save() and accepts in createWorkbook().
+// Crosses the IPC structured-clone boundary unchanged.
+export type UniverSnapshot = IWorkbookData;
 
 export interface WorkspaceFile {
   readonly name: string;
@@ -8,8 +14,7 @@ export interface WorkspaceFile {
 
 export interface ExcelFileData {
   readonly kind: 'excel';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly snapshot: Record<string, any>;
+  readonly snapshot: UniverSnapshot;
 }
 
 export interface WordFileData {
