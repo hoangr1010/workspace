@@ -6,6 +6,8 @@ import { fileRegistry } from './fileRegistry';
 import { ExcelViewer } from '../components/ViewerArea/ExcelViewer';
 import { WordViewer } from '../components/ViewerArea/WordViewer';
 import type { FileData, ExcelFileData, WordFileData } from '../types/file';
+import { get as getWordExporter } from './wordSaveRegistry';
+import { useWorkspaceStore } from '../store/workspaceStore';
 
 /**
  * Wrap a kind-specific Viewer so it satisfies the registry's union-typed slot.
@@ -25,11 +27,21 @@ function bridgeViewer<T extends FileData>(
   };
 }
 
-// .docx — open via IPC, renderer mounts SuperDoc. Save lands in PLAN 1.9.
+// .docx — open via IPC, renderer mounts SuperDoc. The save path looks up the
+// active SuperDoc instance's exporter (registered by WordViewer onReady),
+// awaits the exported ArrayBuffer, ships it to main, then clears the dirty bit.
 fileRegistry['.docx'] = {
   open: (filePath) => window.api.openWord(filePath),
-  save: (_filePath, _data) =>
-    Promise.reject(new Error('PLAN 1.9 — saveWord not implemented yet')),
+  save: async (filePath, data) => {
+    if (data.kind !== 'word') throw new Error('kind mismatch');
+    const exporter = getWordExporter(filePath);
+    if (!exporter) {
+      throw new Error(`WordViewer not mounted for ${filePath}`);
+    }
+    const buffer = await exporter();
+    await window.api.saveWord(filePath, buffer);
+    useWorkspaceStore.getState().markClean(filePath);
+  },
   Viewer: bridgeViewer<WordFileData>(WordViewer, 'word'),
 };
 

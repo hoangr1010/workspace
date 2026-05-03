@@ -1,5 +1,7 @@
-// PLAN 1.7 — Word viewer (SuperDoc)
-// Mounts SuperDocEditor with the .docx ArrayBuffer received from main.
+// PLAN 1.7 / 1.9 — Word viewer (SuperDoc)
+// Mounts SuperDocEditor with the .docx ArrayBuffer received from main, marks
+// the file dirty on edit (1.7), and registers an exporter against the active
+// file path so registerViewers can save the current document state (1.9).
 // See docs/architecture.md → "File type handling / Word".
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -12,6 +14,11 @@ import type {
 import '@superdoc-dev/react/style.css'
 import type { WordFileData } from '../../types/file'
 import { useWorkspaceStore } from '../../store/workspaceStore'
+import {
+  coerceExportToArrayBuffer,
+  register as registerExporter,
+  unregister as unregisterExporter,
+} from '../../lib/wordSaveRegistry'
 import styles from './WordViewer.module.css'
 
 const DOCX_MIME =
@@ -79,6 +86,14 @@ export function WordViewer({ data, filePath }: Props): JSX.Element | null {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
 
+  // Unregister whenever the file path changes or the viewer unmounts so
+  // registerViewers' save() correctly reports "not mounted" once the tab is
+  // closed — leaving a stale exporter behind would let saves silently target
+  // a torn-down SuperDoc instance.
+  useEffect(() => {
+    return () => unregisterExporter(filePath)
+  }, [filePath])
+
   const buffer = data.buffer
 
   // Pre-flight validation runs once per buffer reference.
@@ -134,8 +149,29 @@ export function WordViewer({ data, filePath }: Props): JSX.Element | null {
           // The instance API exposes setZoom; guard for older builds.
           const sd = event.superdoc as unknown as {
             setZoom?: (percent: number) => void
+            export?: (params: {
+              exportType: readonly ['docx']
+              triggerDownload: false
+            }) => Promise<Blob | void>
           }
           sd.setZoom?.(zoom)
+
+          // Register the exporter for this file path. registerViewers picks
+          // it up at save time; we keep the SuperDoc instance reference here.
+          if (typeof sd.export === 'function') {
+            registerExporter(filePath, async () => {
+              const result = await sd.export!({
+                exportType: ['docx'],
+                triggerDownload: false,
+              })
+              if (!result) {
+                throw new Error(
+                  'SuperDoc.export() returned no Blob — cannot save.',
+                )
+              }
+              return coerceExportToArrayBuffer(result)
+            })
+          }
         }}
         onEditorUpdate={() => markDirty(filePath)}
         onContentError={(event: SuperDocContentErrorEvent) => {
