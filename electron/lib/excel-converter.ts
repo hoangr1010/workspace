@@ -238,3 +238,10 @@ export function workbookToUniverSnapshot(wb: XLSX.WorkBook): Record<string, unkn
     resources: [],
   };
 }
+
+// PLAN 1.8 — Inverse of workbookToUniverSnapshot. Reads a Univer snapshot
+// (the same shape produced above) and returns a SheetJS WorkBook ready for
+// XLSX.write. Implementation lands in slice 2 of TDD.
+export function univerSnapshotToWorkbook(_snapshot: Record<string, unknown>): XLSX.WorkBook {
+  throw new Error('PLAN 1.8 — univerSnapshotToWorkbook not implemented');
+}
