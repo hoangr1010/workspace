@@ -18,7 +18,9 @@ export async function openWord(filePath: string): Promise<WordFileData> {
 }
 
 export async function saveWord(filePath: string, buffer: ArrayBuffer): Promise<void> {
-  throw new Error(
-    `PLAN 1.9 — saveWord not implemented (path: ${filePath}, bytes: ${buffer.byteLength})`,
-  );
+  // Wrap the ArrayBuffer in a Uint8Array view so fs.writeFile sees exactly
+  // these bytes — passing the ArrayBuffer to Buffer.from would also work, but
+  // a typed-array view sidesteps the historical Buffer.from(arrayBuffer) edge
+  // cases when the caller hands us a non-zero-byteOffset slice.
+  await fs.writeFile(filePath, new Uint8Array(buffer));
 }
