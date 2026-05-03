@@ -239,9 +239,182 @@ export function workbookToUniverSnapshot(wb: XLSX.WorkBook): Record<string, unkn
   };
 }
 
+// Inverse of normalizeColor — Univer stores '#RRGGBB', SheetJS wants 'RRGGBB'.
+function denormalizeColor(rgb: string | undefined): string | undefined {
+  if (!rgb) return undefined;
+  const hex = rgb.startsWith('#') ? rgb.slice(1) : rgb;
+  return hex.length === 6 ? hex.toUpperCase() : undefined;
+}
+
+// Inverse of sheetJsStyleToUniver. Takes a Univer style entry (the value side
+// of the snapshot's `styles` dict) and returns the SheetJS cell.s shape.
+// Returns `{ style, numFmt }` because the number format lives at cell.z in
+// SheetJS, not inside cell.s.
+function univerStyleToSheetJs(univer: Record<string, unknown>): {
+  style: Record<string, unknown> | undefined;
+  numFmt: string | undefined;
+} {
+  const out: Record<string, unknown> = {};
+  const font: Record<string, unknown> = {};
+
+  if (univer.bl) font.bold = true;
+  if (univer.it) font.italic = true;
+  if (univer.ul) font.underline = true;
+  if (typeof univer.fs === 'number') font.sz = univer.fs;
+  if (typeof univer.ff === 'string') font.name = univer.ff;
+  const cl = univer.cl as Record<string, string> | undefined;
+  const fontColor = denormalizeColor(cl?.rgb);
+  if (fontColor) font.color = { rgb: fontColor };
+  if (Object.keys(font).length) out.font = font;
+
+  // Background fill: Univer { bg: { rgb: '#RRGGBB' } } → SheetJS { fill: { fgColor: { rgb: 'RRGGBB' } } }
+  const bg = univer.bg as Record<string, string> | undefined;
+  const bgColor = denormalizeColor(bg?.rgb);
+  if (bgColor) out.fill = { fgColor: { rgb: bgColor }, patternType: 'solid' };
+
+  // Alignment: Univer ht (1/2/3 = left/center/right), vt (1/2/3 = top/center/bottom)
+  const alignment: Record<string, unknown> = {};
+  if (univer.ht === 2) alignment.horizontal = 'center';
+  else if (univer.ht === 3) alignment.horizontal = 'right';
+  if (univer.vt === 1) alignment.vertical = 'top';
+  else if (univer.vt === 2) alignment.vertical = 'center';
+  if (univer.tb === 3) alignment.wrapText = true;
+  if (Object.keys(alignment).length) out.alignment = alignment;
+
+  // Borders: Univer { bd: { t/b/l/r: { s: <num>, cl: { rgb } } } } → SheetJS { border: { top/bottom/left/right: { style, color } } }
+  const bd = univer.bd as Record<string, Record<string, unknown>> | undefined;
+  if (bd) {
+    const styleName: Record<number, string> = { 1: 'thin', 2: 'medium', 3: 'thick', 7: 'dotted', 11: 'dashed' };
+    const sideKeys = { t: 'top', b: 'bottom', l: 'left', r: 'right' } as const;
+    const border: Record<string, unknown> = {};
+    for (const side of ['t', 'b', 'l', 'r'] as const) {
+      const b = bd[side];
+      if (!b) continue;
+      const name = styleName[b.s as number];
+      if (!name) continue;
+      const color = denormalizeColor((b.cl as Record<string, string> | undefined)?.rgb);
+      border[sideKeys[side]] = color ? { style: name, color: { rgb: color } } : { style: name };
+    }
+    if (Object.keys(border).length) out.border = border;
+  }
+
+  const numFmtPattern = (univer.n as Record<string, unknown> | undefined)?.pattern;
+  const numFmt = typeof numFmtPattern === 'string' ? numFmtPattern : undefined;
+
+  return {
+    style: Object.keys(out).length ? out : undefined,
+    numFmt,
+  };
+}
+
 // PLAN 1.8 — Inverse of workbookToUniverSnapshot. Reads a Univer snapshot
 // (the same shape produced above) and returns a SheetJS WorkBook ready for
-// XLSX.write. Implementation lands in slice 2 of TDD.
-export function univerSnapshotToWorkbook(_snapshot: Record<string, unknown>): XLSX.WorkBook {
-  throw new Error('PLAN 1.8 — univerSnapshotToWorkbook not implemented');
+// XLSX.write. Trims rowCount/columnCount padding back to the actual used range
+// so files don't bloat per save. Univer-only fields (tabColor, hidden,
+// zoomRatio, showGridlines) are silently dropped — SheetJS CE can't represent
+// them.
+export function univerSnapshotToWorkbook(snapshot: Record<string, unknown>): XLSX.WorkBook {
+  const wb = XLSX.utils.book_new();
+  const sheetOrder = (snapshot.sheetOrder ?? []) as string[];
+  const sheets = (snapshot.sheets ?? {}) as Record<string, Record<string, unknown>>;
+  const styles = (snapshot.styles ?? {}) as Record<string, Record<string, unknown>>;
+
+  for (const sheetId of sheetOrder) {
+    const sheet = sheets[sheetId];
+    if (!sheet) continue;
+
+    const sheetName = (sheet.name as string | undefined) ?? sheetId;
+    const cellData = (sheet.cellData ?? {}) as Record<string | number, Record<string | number, Record<string, unknown>>>;
+
+    // Walk cellData to find the actual used range (NOT rowCount/columnCount,
+    // which are padded for grid feel — see workbookToUniverSnapshot lines 215–216).
+    let minR = Infinity, maxR = -1, minC = Infinity, maxC = -1;
+    const ws: XLSX.WorkSheet = {};
+
+    for (const rKey of Object.keys(cellData)) {
+      const r = Number(rKey);
+      const row = cellData[rKey];
+      if (!row) continue;
+      for (const cKey of Object.keys(row)) {
+        const c = Number(cKey);
+        const uCell = row[cKey];
+        if (!uCell) continue;
+
+        const cell: XLSX.CellObject = {} as XLSX.CellObject;
+
+        // Formula: SheetJS stores without leading '='
+        if (typeof uCell.f === 'string') {
+          const f = uCell.f;
+          (cell as Record<string, unknown>).f = f.startsWith('=') ? f.slice(1) : f;
+        }
+        if (uCell.v !== undefined) {
+          (cell as Record<string, unknown>).v = uCell.v;
+        }
+        // Cell type: Univer 1/2/4 → SheetJS 's'/'n'/'b'
+        switch (uCell.t) {
+          case 1: cell.t = 's'; break;
+          case 2: cell.t = 'n'; break;
+          case 4: cell.t = 'b'; break;
+        }
+
+        // Style + number format from the shared styles dict
+        if (typeof uCell.s === 'string' && styles[uCell.s]) {
+          const u = styles[uCell.s] as Record<string, unknown>;
+          const { style, numFmt } = univerStyleToSheetJs(u);
+          if (style) (cell as Record<string, unknown>).s = style;
+          if (numFmt) (cell as Record<string, unknown>).z = numFmt;
+        }
+
+        // Skip cells with no real content (no value, no formula)
+        if ((cell as Record<string, unknown>).v === undefined && !(cell as Record<string, unknown>).f) continue;
+
+        ws[XLSX.utils.encode_cell({ r, c })] = cell;
+        if (r < minR) minR = r;
+        if (r > maxR) maxR = r;
+        if (c < minC) minC = c;
+        if (c > maxC) maxC = c;
+      }
+    }
+
+    if (maxR >= 0) {
+      ws['!ref'] = XLSX.utils.encode_range({ s: { r: minR, c: minC }, e: { r: maxR, c: maxC } });
+    }
+
+    // Merges
+    const mergeData = (sheet.mergeData ?? []) as Array<{ startRow: number; startColumn: number; endRow: number; endColumn: number }>;
+    if (mergeData.length) {
+      ws['!merges'] = mergeData.map((m) => ({
+        s: { r: m.startRow, c: m.startColumn },
+        e: { r: m.endRow, c: m.endColumn },
+      }));
+    }
+
+    // Column widths: Univer { 0: { w: 150 } } → SheetJS [{ wpx: 150 }]
+    const columnData = (sheet.columnData ?? {}) as Record<string | number, { w: number } | undefined>;
+    const colKeys = Object.keys(columnData).map(Number);
+    if (colKeys.length) {
+      const cols: XLSX.ColInfo[] = [];
+      for (const ci of colKeys) {
+        const col = columnData[ci];
+        if (col?.w !== undefined) cols[ci] = { wpx: col.w };
+      }
+      ws['!cols'] = cols;
+    }
+
+    // Row heights
+    const rowData = (sheet.rowData ?? {}) as Record<string | number, { h: number } | undefined>;
+    const rowKeys = Object.keys(rowData).map(Number);
+    if (rowKeys.length) {
+      const rows: XLSX.RowInfo[] = [];
+      for (const ri of rowKeys) {
+        const row = rowData[ri];
+        if (row?.h !== undefined) rows[ri] = { hpx: row.h };
+      }
+      ws['!rows'] = rows;
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  }
+
+  return wb;
 }
