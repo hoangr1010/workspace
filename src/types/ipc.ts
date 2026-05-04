@@ -1,4 +1,4 @@
-import type { WorkspaceFile, ExcelFileData, WordFileData, PptxFileData } from './file';
+import type { WorkspaceFile, ExcelFileData, WordFileData, PptxFileData, UniverSnapshot } from './file';
 
 export interface WindowApi {
   // Workspace
@@ -8,7 +8,7 @@ export interface WindowApi {
 
   // File IO
   openExcel(filePath: string): Promise<ExcelFileData>;
-  saveExcel(filePath: string, snapshot: Record<string, unknown>): Promise<void>;
+  saveExcel(filePath: string, snapshot: UniverSnapshot): Promise<void>;
   openWord(filePath: string): Promise<WordFileData>;
   saveWord(filePath: string, buffer: ArrayBuffer): Promise<void>;
   openPptx(filePath: string): Promise<PptxFileData>;

@@ -10,7 +10,7 @@ export default defineConfig({
         formats: ['cjs']
       },
       rollupOptions: {
-        external: ['electron']
+        external: ['electron', '@tomjs/electron-devtools-installer']
       }
     }
   },

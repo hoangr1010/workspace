@@ -111,9 +111,20 @@ function buildMenu(): void {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
-app.on('ready', () => {
+void app.whenReady().then(async () => {
   registerIpcHandlers(ipcMain)
   buildMenu()
+
+  if (!app.isPackaged) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { installExtension, REDUX_DEVTOOLS } = require('@tomjs/electron-devtools-installer') as typeof import('@tomjs/electron-devtools-installer')
+      await installExtension(REDUX_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
+    } catch (err) {
+      console.warn('[dev] Redux DevTools install failed:', err)
+    }
+  }
+
   createWindow()
 })
 

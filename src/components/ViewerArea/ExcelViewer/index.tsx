@@ -1,13 +1,17 @@
-// PLAN 1.6 — Excel viewer. Mounts Univer (toolbar, formula bar, grid, sheet tabs)
-// onto a div and loads the workbook snapshot.
+// PLAN 1.6 — Excel viewer. Mounts Univer (toolbar, formula bar, grid, sheet
+// tabs) onto a div and loads the workbook snapshot.
+// PLAN 1.8 — Subscribes to mutation commands → markDirty, registers the live
+// Univer snapshot for the save path.
 
 import { useEffect, useRef } from 'react';
-import { createUniver, defaultTheme, LocaleType, mergeLocales } from '@univerjs/presets';
+import { createUniver, defaultTheme, LocaleType, mergeLocales, CommandType } from '@univerjs/presets';
 import { UniverSheetsCorePreset } from '@univerjs/presets/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/presets/preset-sheets-core/locales/en-US';
 import '@univerjs/presets/lib/styles/preset-sheets-core.css';
 import type { ExcelFileData } from '../../../types/file';
 import { readClayRamp } from '../../../styles/clayRamp';
+import { useWorkspaceStore } from '../../../store/workspaceStore';
+import { register, unregister } from '../../../lib/excelLiveSnapshot';
 import styles from './ExcelViewer.module.css';
 
 interface Props {
@@ -15,7 +19,7 @@ interface Props {
   filePath: string;    // Used by parent as React key — switching files remounts this component
 }
 
-export function ExcelViewer({ data }: Props): JSX.Element {
+export function ExcelViewer({ data, filePath }: Props): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,8 +34,46 @@ export function ExcelViewer({ data }: Props): JSX.Element {
       presets: [UniverSheetsCorePreset({ container: containerRef.current })],
     });
 
-    univerAPI.createWorkbook(data.snapshot);
-    return () => univerAPI.dispose();
+    const fwb = univerAPI.createWorkbook(data.snapshot);
+    register(filePath, () => fwb.save());
+
+    // User edits flow as: top-level COMMAND → fires MUTATIONs synchronously.
+    // System mutations (snapshot load, formula recalc, async writes) fire
+    // outside any user COMMAND. Track command depth and mark dirty only for
+    // mutations that fire while a user command is executing.
+    let userCommandDepth = 0;
+
+    const beforeSub = univerAPI.addEvent(univerAPI.Event.BeforeCommandExecute, (event) => {
+      if (event.type === CommandType.COMMAND) userCommandDepth++;
+    });
+
+    const sub = univerAPI.addEvent(univerAPI.Event.CommandExecuted, (event) => {
+      if (event.type === CommandType.COMMAND) {
+        userCommandDepth = Math.max(0, userCommandDepth - 1);
+        return;
+      }
+
+      const isUserEdit =
+        event.type === CommandType.MUTATION &&
+        userCommandDepth > 0 &&
+        // Rich-text-editing fires when cell editor is focused, before any
+        // actual typing — exclude it (matches Univer's own collab pattern).
+        event.id !== 'doc.mutation.rich-text-editing' &&
+        !event.options?.onlyLocal &&
+        !event.options?.fromChangeset &&
+        !event.options?.fromCollab;
+
+      if (isUserEdit) {
+        useWorkspaceStore.getState().markDirty(filePath);
+      }
+    });
+
+    return () => {
+      beforeSub.dispose();
+      sub.dispose();
+      unregister(filePath);
+      univerAPI.dispose();
+    };
   // Snapshot read once at mount; parent's key={filePath} forces remount on file change.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
