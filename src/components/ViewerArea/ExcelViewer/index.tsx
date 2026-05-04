@@ -37,15 +37,39 @@ export function ExcelViewer({ data, filePath }: Props): JSX.Element {
     const fwb = univerAPI.createWorkbook(data.snapshot);
     register(filePath, () => fwb.save());
 
-    // MUTATION = changes to saved state (typing, paste, fill, undo, merges).
-    // OPERATION = transient UI state (selection, scroll) — skipped.
+    // User edits flow as: top-level COMMAND → fires MUTATIONs synchronously.
+    // System mutations (snapshot load, formula recalc, async writes) fire
+    // outside any user COMMAND. Track command depth and mark dirty only for
+    // mutations that fire while a user command is executing.
+    let userCommandDepth = 0;
+
+    const beforeSub = univerAPI.addEvent(univerAPI.Event.BeforeCommandExecute, (event) => {
+      if (event.type === CommandType.COMMAND) userCommandDepth++;
+    });
+
     const sub = univerAPI.addEvent(univerAPI.Event.CommandExecuted, (event) => {
-      if (event.type === CommandType.MUTATION) {
+      if (event.type === CommandType.COMMAND) {
+        userCommandDepth = Math.max(0, userCommandDepth - 1);
+        return;
+      }
+
+      const isUserEdit =
+        event.type === CommandType.MUTATION &&
+        userCommandDepth > 0 &&
+        // Rich-text-editing fires when cell editor is focused, before any
+        // actual typing — exclude it (matches Univer's own collab pattern).
+        event.id !== 'doc.mutation.rich-text-editing' &&
+        !event.options?.onlyLocal &&
+        !event.options?.fromChangeset &&
+        !event.options?.fromCollab;
+
+      if (isUserEdit) {
         useWorkspaceStore.getState().markDirty(filePath);
       }
     });
 
     return () => {
+      beforeSub.dispose();
       sub.dispose();
       unregister(filePath);
       univerAPI.dispose();
